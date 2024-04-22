@@ -1,23 +1,16 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   ActionFunctionArgs,
   Form,
   Link,
   useActionData,
 } from 'react-router-dom';
-
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { z } from 'zod';
+import { LoginActionData, LoginSchema } from './login';
 import { useAuth } from '@/components/auth-provider';
-import { signInWithEmail } from '@/lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
-
-export const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+import { signUpNewUser } from '@/lib/supabase';
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
@@ -28,32 +21,17 @@ export async function action({ request }: ActionFunctionArgs) {
     return { success: false, error: result.error.flatten() };
   }
 
-  const { data, error } = await signInWithEmail({
-    email: result.data.email,
-    password: result.data.password,
-  });
+  const { data, error } = await signUpNewUser(
+    result?.data?.email,
+    result?.data?.password,
+  );
   if (error) {
     return { success: false, error };
   }
   return { success: true, data, error };
 }
 
-export interface LoginActionData {
-  success: boolean;
-  data: {
-    session: Omit<Session, 'user'>;
-    user: User;
-  };
-  error: z.typeToFlattenedError<
-    {
-      email: string;
-      password: string;
-    },
-    string
-  >;
-}
-
-export function Login() {
+export function Register() {
   const data = useActionData() as LoginActionData;
   const emailError = data?.error?.fieldErrors?.email?.at(0);
   const passwordError = data?.error?.fieldErrors?.password?.at(0);
@@ -63,12 +41,11 @@ export function Login() {
   if (data?.success) {
     setSession({ ...data?.data.session, user: data?.data.user });
   }
-
   return (
     <div className="flex h-full items-center">
       <Card className="mx-auto min-w-96 max-w-sm">
         <CardHeader>
-          <CardTitle className="text-xl">Login</CardTitle>
+          <CardTitle className="text-xl">Sign Up</CardTitle>
         </CardHeader>
         <CardContent>
           <Form method="post" noValidate className="grid gap-4">
@@ -105,13 +82,13 @@ export function Login() {
               </div>
             </div>
             <Button type="submit" className="w-full">
-              Login
+              Create an account
             </Button>
           </Form>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link to="/register" className="underline">
-              Sign up
+            Already have an account?{' '}
+            <Link to="/login" className="underline">
+              Sign in
             </Link>
           </div>
         </CardContent>

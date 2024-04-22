@@ -2,7 +2,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { Root } from './routes/root';
 import { AuthProvider } from './components/auth-provider';
 import { Login, action as loginAction } from './routes/login';
-import { Register } from './routes/register';
+import { Register, action as registerAction } from './routes/register';
 import { PublicRoute } from './components/public-route';
 import { Notes } from './routes/notes';
 import { ProtectedRoute } from './components/protected-route';
@@ -57,6 +57,7 @@ const router = createBrowserRouter([
         <Register />
       </PublicRoute>
     ),
+    action: registerAction,
   },
 
   // {

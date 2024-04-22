@@ -4,8 +4,10 @@ import { AuthProvider } from './components/auth-provider';
 import { Login, action as loginAction } from './routes/login';
 import { Register, action as registerAction } from './routes/register';
 import { PublicRoute } from './components/public-route';
-import { Notes } from './routes/notes';
+import { Notes, loader as notesLoader } from './routes/notes';
+import { Note } from './routes/note';
 import { ProtectedRoute } from './components/protected-route';
+import { Editor } from './components/editor';
 
 const router = createBrowserRouter([
   {
@@ -38,7 +40,8 @@ const router = createBrowserRouter([
         <Notes />
       </ProtectedRoute>
     ),
-    children: [{ path: 'notes/:noteId', element: <div>Note</div> }],
+    children: [{ path: ':noteId', element: <Note /> }],
+    // loader: notesLoader,
   },
 
   {

@@ -9,39 +9,47 @@ import {
 } from '@/components/ui/resizable';
 import { createTag, fetchNotes, fetchTags } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import {
-  Cross,
-  Folder,
-  Hash,
-  LogOut,
-  Notebook,
-  Plus,
-  Trash,
-} from 'lucide-react';
+import clsx from 'clsx';
+import { Folder, Hash, LogOut, Notebook, Plus, Trash } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
-import { Link, Outlet, useLoaderData } from 'react-router-dom';
+import {
+  ActionFunctionArgs,
+  Link,
+  Outlet,
+  useFetcher,
+  useLoaderData,
+} from 'react-router-dom';
 
-export async function loader() {
-  // const tags = await fetchTags();
-  // const notes = await fetchNotes();
-  // return { notes: {}, tags };
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const newTag = formData.get('addedTag');
+  const userId = formData.get('user_id');
+
+  if (newTag && userId) {
+    console.log('action', newTag, userId);
+    newTag.toString().trim();
+    const result = await createTag(newTag.toString().trim(), userId.toString());
+  }
   return null;
 }
 
+export async function loader() {
+  const tags = await fetchTags();
+  // const notes = await fetchNotes();
+  return { notes: {}, tags };
+  // return null;
+}
+
 export function Notes() {
-  const { session } = useAuth();
-  // const data = useLoaderData();
+  const data = useLoaderData();
   const [notes, setNotes] = useState([]);
+  console.log(data);
 
   const [selectedTag, setSelectedTag] = useState('all');
 
   function handleTagSelect(tagId: string) {
     setSelectedTag(tagId);
-  }
-
-  async function handleAddTag() {
-    // await createTag('test-1', session?.user.id);
   }
 
   // useEffect(() => {
@@ -111,28 +119,21 @@ export function Notes() {
                 <Trash />
                 Trash
               </Button>
-              <div className="flex w-full justify-between p-4">
-                <span>Tags:</span>
-                <Plus />
-              </div>
 
-              <Button
-                variant="outline"
-                className="flex w-full justify-start gap-2 border-none"
-                onClick={() => handleTagSelect('all')}
-              >
-                <Hash />
-                Tag 1
-              </Button>
-
-              <Button
-                variant="outline"
-                className="flex w-full justify-start gap-2 border-none"
-                onClick={() => handleTagSelect('all')}
-              >
-                <Hash />
-                Tag 2
-              </Button>
+              <TagForm />
+              {data.tags.map(tag => {
+                return (
+                  <Button
+                    key={tag.id}
+                    variant="outline"
+                    className="flex w-full justify-start gap-2 border-none"
+                    onClick={() => handleTagSelect('all')}
+                  >
+                    <Hash />
+                    {tag.name}
+                  </Button>
+                );
+              })}
             </div>
           </div>
         </ResizablePanel>
@@ -157,8 +158,6 @@ export function Notes() {
                 buttonVariants({ variant: 'outline' }),
                 'flex w-full justify-start gap-2 border-none',
               )}
-
-              // className="flex w-full justify-start gap-2 border-none p-4"
             >
               Note 2
             </Link>
@@ -172,52 +171,70 @@ export function Notes() {
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
-    // <div className="space-y-4">
-    //   <h1>Notes</h1>
-    //   <form className="flex justify-center">
-    //     <div>
-    //       <div>
-    //         <Label htmlFor="title">title</Label>
-    //         <Input
-    //           {...register('title')}
-    //           id="title"
-    //           type="text"
-    //           placeholder="title"
-    //         />
-    //       </div>
+  );
+}
 
-    //       <div>
-    //         <Label htmlFor="body">body</Label>
-    //         <Input
-    //           {...register('body')}
-    //           id="body"
-    //           type="text"
-    //           placeholder="body"
-    //         />
-    //       </div>
-    //       <Button
-    //         onClick={handleSubmit(data => {
-    //           const note = addNote(data.title, data.body, session.user.id);
-    //           setNotes([...notes, note]);
-    //         })}
-    //       >
-    //         Add Note
-    //       </Button>
-    //     </div>
-    //   </form>
-    //   <div className="flex gap-2">
-    //     {notes.map(note => {
-    //       return (
-    //         <div
-    //           className="px-4 py-1 border-solid border-2 rounded-md bg-gray-100"
-    //           key={note.id}
-    //         >
-    //           <h3 className="text-2xl">{note.title}</h3>{' '}
-    //           <p className="text-sm">{note.body}</p>
-    //         </div>
-    //       );
-    //     })}
-    //   </div>
-    // </div>
+function TagForm() {
+  const fetcher = useFetcher();
+  const [addingTag, setAddingTag] = useState(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const tagInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { session } = useAuth();
+
+  function handleResetTag() {
+    if (!formRef.current) {
+      return;
+    }
+
+    const formData = new FormData(formRef.current);
+    const newTag = formData.get('addedTag');
+    //TODO: show error if tag already exists
+    if (newTag) {
+      fetcher.submit(formData, { method: 'post' });
+    }
+
+    formRef.current?.reset();
+    setAddingTag(false);
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!formRef.current) {
+      return;
+    }
+    handleResetTag();
+  }
+
+  return (
+    <>
+      <div className="flex w-full justify-between p-4">
+        <span>Tags:</span>
+        <Button
+          onClick={() => {
+            setAddingTag(true);
+            tagInputRef?.current?.focus();
+          }}
+          size="icon"
+          variant="outline"
+        >
+          <Plus />
+        </Button>
+      </div>
+
+      <fetcher.Form
+        method="post"
+        className={cn(
+          'flex w-full items-center gap-2 px-4 py-2',
+          !addingTag && 'opacity-0',
+        )}
+        ref={formRef}
+        onSubmit={e => handleSubmit(e)}
+      >
+        <Hash />
+        <input name="user_id" defaultValue={session?.user.id} type="hidden" />
+        <Input name="addedTag" ref={tagInputRef} onBlur={handleResetTag} />
+      </fetcher.Form>
+    </>
   );
 }

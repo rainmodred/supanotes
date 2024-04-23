@@ -8,21 +8,13 @@ if (!url || !anonKey) {
 }
 const supabase = createClient(url, anonKey);
 
-async function signUpNewUser({
-  email,
-  password,
-}: {
-  email: string;
-  password: string;
-}) {
+async function signUpNewUser(email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
   });
   console.log('signup', data, error);
-  if (data) {
-    return <Navigate to="/notes" />;
-  }
+  return { data, error };
 }
 
 async function signInWithEmail({
@@ -53,6 +45,28 @@ export async function addNote(title: string, body: string, id: string) {
   }
 }
 export const fetchNotes = async setState => {
+
+async function fetchTags() {
+  try {
+    const { data } = await supabase.from('tags').select('*');
+    console.log('fetchTags', data);
+    return data;
+  } catch (error) {
+    console.log('error', error);
+  }
+}
+
+async function createTag(name: string, userId: string) {
+  try {
+    const { data } = await supabase
+      .from('tags')
+      .insert([{ name, user_id: userId }]);
+    console.log('createTag', data);
+  } catch (error) {
+    console.log('error', error);
+  }
+}
+
   try {
     const { data } = await supabase.from('notes').select('*');
     console.log(data);
@@ -63,4 +77,11 @@ export const fetchNotes = async setState => {
   }
 };
 
-export { supabase, signUpNewUser, signInWithEmail };
+export {
+  supabase,
+  signUpNewUser,
+  signInWithEmail,
+  fetchTags,
+  fetchNotes,
+  createTag,
+};

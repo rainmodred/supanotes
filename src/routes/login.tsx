@@ -29,10 +29,10 @@ export async function action({ request }: ActionFunctionArgs) {
     return { success: false, error: result.error.flatten() };
   }
 
-  const { data, error } = await signInWithEmail({
-    email: result.data.email,
-    password: result.data.password,
-  });
+  const { data, error } = await signInWithEmail(
+    result.data.email,
+    result.data.password,
+  );
   if (error) {
     return { success: false, error };
   }

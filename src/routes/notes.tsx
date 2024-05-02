@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/resizable';
 import { createTag, fetchNotes, fetchTags } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import clsx from 'clsx';
+import { QueryClient, useQueries } from '@tanstack/react-query';
 import { Folder, Hash, LogOut, Notebook, Plus, Trash } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
@@ -21,44 +21,52 @@ import {
   useLoaderData,
 } from 'react-router-dom';
 
-export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const newTag = formData.get('addedTag');
-  const userId = formData.get('user_id');
+export const action =
+  (queryClient: QueryClient) =>
+  async ({ request }: ActionFunctionArgs) => {
+    const formData = await request.formData();
+    const newTag = formData.get('addedTag');
+    const userId = formData.get('user_id');
 
-  if (newTag && userId) {
-    console.log('action', newTag, userId);
-    newTag.toString().trim();
-    const result = await createTag(newTag.toString().trim(), userId.toString());
-  }
-  return null;
-}
+    if (newTag && userId) {
+      newTag.toString().trim();
+      await createTag(newTag.toString().trim(), userId.toString());
+    }
+    return null;
+  };
 
-export async function loader() {
-  const tags = await fetchTags();
-  // const notes = await fetchNotes();
-  return { notes: {}, tags };
-  // return null;
-}
+export const tagsQuery = {
+  queryKey: ['tags'],
+  queryFn: () => fetchTags(),
+};
+
+export const notesQuery = {
+  queryKey: ['notes'],
+  queryFn: () => fetchNotes(),
+};
+
+export const loader = (queryClient: QueryClient) => async () => {
+  const tags = await queryClient.fetchQuery({ ...tagsQuery });
+  const notes = await queryClient.fetchQuery({ ...notesQuery });
+  return { notes, tags };
+};
 
 export function Notes() {
-  const data = useLoaderData();
-  const [notes, setNotes] = useState([]);
-  console.log(data);
+  const initialData = useLoaderData();
+  const [notesResult, tagsResult] = useQueries({
+    queries: [
+      { ...notesQuery, initialData: initialData.notes },
+      { ...tagsQuery, initialData: initialData.tags },
+    ],
+  });
+  const { data: notes } = notesResult;
+  const { data: tags } = tagsResult;
 
   const [selectedTag, setSelectedTag] = useState('all');
 
   function handleTagSelect(tagId: string) {
     setSelectedTag(tagId);
   }
-
-  // useEffect(() => {
-  //   fetchNotes(setNotes);
-  // }, []);
-
-  // if (!session) {
-  //   return <Navigate to="/login" replace />;
-  // }
 
   const ref = useRef<ImperativePanelHandle>(null);
   const editorPanel = useRef<ImperativePanelHandle>(null);
@@ -121,7 +129,7 @@ export function Notes() {
               </Button>
 
               <TagForm />
-              {data.tags.map(tag => {
+              {tags.map(tag => {
                 return (
                   <Button
                     key={tag.id}
@@ -140,27 +148,33 @@ export function Notes() {
         <ResizableHandle />
         <ResizablePanel defaultSize={20} collapsible ref={ref}>
           <div className="py-4">
+            <div className="flex items-center justify-between px-4">
+              <p>Notes</p>
+              <Link
+                to="new"
+                className={cn(
+                  buttonVariants({ variant: 'outline', size: 'icon' }),
+                )}
+              >
+                <Plus />
+              </Link>
+            </div>
+
             <Input className="mb-6" placeholder="Search note or #tag" />
-
-            <Link
-              to="note1Id"
-              className={cn(
-                buttonVariants({ variant: 'outline' }),
-                'flex w-full justify-start gap-2 border-none',
-              )}
-            >
-              Note 1
-            </Link>
-
-            <Link
-              to="note2Id"
-              className={cn(
-                buttonVariants({ variant: 'outline' }),
-                'flex w-full justify-start gap-2 border-none',
-              )}
-            >
-              Note 2
-            </Link>
+            {notes.map(note => {
+              return (
+                <Link
+                  key={note.id}
+                  to={note.id.toString()}
+                  className={cn(
+                    buttonVariants({ variant: 'outline' }),
+                    'flex w-full justify-start gap-2 border-none',
+                  )}
+                >
+                  {note.title}
+                </Link>
+              );
+            })}
           </div>
         </ResizablePanel>
         <ResizableHandle />

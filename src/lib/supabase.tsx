@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { Navigate } from 'react-router-dom';
 
 const url = import.meta.env.VITE_URL;
 const anonKey = import.meta.env.VITE_ANON_KEY;
@@ -33,18 +32,56 @@ async function signInWithEmail({
   return { data, error };
 }
 
-export async function addNote(title: string, body: string, id: string) {
+async function createNote({
+  title,
+  body,
+  user_id,
+}: {
+  title: string;
+  body: string;
+  user_id: string;
+}) {
   try {
     const { data } = await supabase
       .from('notes')
-      .insert([{ title, body, user_id: id }])
+      .insert([{ title, body, user_id }])
       .select();
-    return data;
+    return data.at(0);
   } catch (error) {
     console.log('error', error);
   }
 }
-export const fetchNotes = async setState => {
+
+async function updateNote({
+  id,
+  title,
+  body,
+  user_id,
+}: {
+  id: number;
+  title: string;
+  body: string;
+  user_id: string;
+}) {
+  try {
+    const { data } = await supabase
+      .from('notes')
+      .update({ id, title, body, user_id })
+      .eq('id', id)
+      .select();
+    return data.at(0);
+  } catch (error) {
+    console.log('error', error);
+  }
+}
+
+async function deleteNote(noteId: number) {
+  try {
+    return await supabase.from('notes').delete().eq('id', noteId);
+  } catch (error) {
+    console.log('error', error);
+  }
+}
 
 async function fetchTags() {
   try {
@@ -67,15 +104,25 @@ async function createTag(name: string, userId: string) {
   }
 }
 
+async function fetchNotes() {
   try {
-    const { data } = await supabase.from('notes').select('*');
-    console.log(data);
-    if (setState) setState(data);
+    const { data } = await supabase.from('notes').select(`id, title`);
+    console.log('fetchNotes', data);
     return data;
   } catch (error) {
     console.log('error', error);
   }
-};
+}
+
+async function fetchNote(noteId: string) {
+  try {
+    const { data } = await supabase.from('notes').select().eq('id', noteId);
+    console.log('fetchNote', data);
+    return data.at(0);
+  } catch (error) {
+    console.log('error', error);
+  }
+}
 
 export {
   supabase,
@@ -83,5 +130,9 @@ export {
   signInWithEmail,
   fetchTags,
   fetchNotes,
+  fetchNote,
   createTag,
+  createNote,
+  updateNote,
+  deleteNote,
 };

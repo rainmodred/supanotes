@@ -1,28 +1,68 @@
 import { Editor } from '@/components/editor';
-import { useLoaderData, Form } from 'react-router-dom';
+import { deleteNote, fetchNote, updateNote } from '@/lib/supabase';
+import { QueryClient, useQuery } from '@tanstack/react-query';
+import {
+  ActionFunctionArgs,
+  LoaderFunctionArgs,
+  json,
+  redirect,
+  useLoaderData,
+  useParams,
+} from 'react-router-dom';
+import { notesQuery } from './notes';
 
-// export async function loader({ params }) {
-//   const note = await getNote(params.noteId);
-//   if (!note) throw new Response('', { status: 404 });
-//   return note;
-// }
+export const action =
+  (queryClient: QueryClient) =>
+  async ({ request }: ActionFunctionArgs) => {
+    const formData = await request.formData();
+    const updates = Object.fromEntries(formData);
+    const { intent, ...rest } = updates;
+    console.log('note action', updates, intent);
 
-// export async function action({ params }) {
-//   await deleteNote(params.noteId);
-//   return redirect('/new');
-// }
+    if (intent === 'save') {
+      const updatedNote = await updateNote(rest);
+      await queryClient.setQueryData(noteQuery(rest.id).queryKey, updatedNote);
+      return { ok: true };
+    }
+    if (intent === 'delete') {
+      const { error } = await deleteNote(rest.id);
+      if (error) {
+        throw json({ message: 'Delete error' }, { status: 404 });
+      }
+      queryClient.removeQueries({
+        queryKey: noteQuery(rest.id).queryKey,
+      });
+
+      queryClient.setQueryData(notesQuery.queryKey, oldData =>
+        oldData.filter(note => note.id !== rest.id),
+      );
+
+      return redirect(`/notes`);
+    }
+
+    throw json({ message: 'Invalid intent' }, { status: 400 });
+  };
+
+export const noteQuery = (noteId: string) => ({
+  queryKey: ['notes', noteId],
+  queryFn: async () => fetchNote(noteId),
+});
+
+export const loader =
+  (queryClient: QueryClient) =>
+  async ({ params }: LoaderFunctionArgs) => {
+    const query = noteQuery(params.noteId);
+    const data = await queryClient.fetchQuery({ ...query });
+    console.log('note loader', data);
+
+    if (!data) throw new Response('', { status: 404 });
+    return data;
+  };
 
 export function Note() {
-  // const note = useLoaderData();
-  // return (
-  //   <div>
-  //     <Markdown className="p-4">{md}</Markdown>
-  //     {/* <h2></h2>
-  //     <div></div>
-  //     <Form method="post" style={{ marginTop: '2rem' }}>
-  //       <button type="submit">Delete</button>
-  //     </Form> */}
-  //   </div>
-  // );
-  return <Editor />;
+  const initialData = useLoaderData();
+  const params = useParams();
+  const { data: note } = useQuery({ ...noteQuery(params.noteId), initialData });
+
+  return <Editor note={note} />;
 }

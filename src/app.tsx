@@ -1,4 +1,8 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import {
+  RouterProvider,
+  createBrowserRouter,
+  useRouteError,
+} from 'react-router-dom';
 import { Root } from './routes/root';
 import { AuthProvider } from './components/auth-provider';
 import { Login, action as loginAction } from './routes/login';
@@ -9,9 +13,27 @@ import {
   loader as notesLoader,
   action as notesAction,
 } from './routes/notes';
-import { Note } from './routes/note';
+import {
+  Note,
+  action as noteAction,
+  loader as noteLoader,
+} from './routes/note';
 import { ProtectedRoute } from './components/protected-route';
-import { Editor } from './components/editor';
+import { NewNote, action as newNoteAction } from './routes/new';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+function ErrorBoundary() {
+  let error = useRouteError();
+  console.error(error);
+  return <div>Dang!</div>;
+}
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { refetchOnWindowFocus: false, staleTime: 1000 * 60 * 10 },
+  },
+});
 
 const router = createBrowserRouter([
   {
@@ -21,20 +43,6 @@ const router = createBrowserRouter([
         <Root />
       </PublicRoute>
     ),
-    children: [
-      // {
-      //   path: 'new',
-      //   element: <NewNote />,
-      //   action: newNoteAction,
-      // },
-      // {
-      //   path: 'note/:noteId',
-      //   element: <Note />,
-      //   loader: noteLoader,
-      //   action: noteAction,
-      //   errorElement: <h2>Note not found</h2>,
-      // },
-    ],
   },
 
   {
@@ -44,9 +52,22 @@ const router = createBrowserRouter([
         <Notes />
       </ProtectedRoute>
     ),
-    children: [{ path: ':noteId', element: <Note /> }],
-    loader: notesLoader,
-    action: notesAction,
+    loader: notesLoader(queryClient),
+    action: notesAction(queryClient),
+    children: [
+      {
+        path: 'new',
+        element: <NewNote />,
+        action: newNoteAction(queryClient),
+      },
+      {
+        path: ':noteId',
+        element: <Note />,
+        action: noteAction(queryClient),
+        loader: noteLoader(queryClient),
+        errorElement: <ErrorBoundary />,
+      },
+    ],
   },
 
   {
@@ -67,27 +88,16 @@ const router = createBrowserRouter([
     ),
     action: registerAction,
   },
-
-  // {
-  //   path: 'demo',
-  //   element: <Demo />,
-  //   loader: demoLoader,
-  //   action: newNoteAction,
-  //   children: [
-  //     { path: 'note/:noteId', element: <Editor /> },
-  //     {
-  //       path: 'note/new',
-  //       element: <Editor />,
-  //     },
-  //   ],
-  // },
 ]);
 
 function App() {
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+      <ReactQueryDevtools />
+    </QueryClientProvider>
   );
 }
 

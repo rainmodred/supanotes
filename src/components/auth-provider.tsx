@@ -6,7 +6,6 @@ interface AuthContextType {
   session: Session | null;
   setSession: (value: Session) => void;
   logout: () => void;
-  // logout: () => void;
 }
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -15,7 +14,7 @@ interface AuthProviderProps {
 }
 
 function AuthProvider({ children }: AuthProviderProps) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null | undefined>(undefined);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

@@ -11,6 +11,7 @@ import {
 import { LoginActionData, LoginSchema } from './login';
 import { useAuth } from '@/components/auth-provider';
 import { signUpNewUser } from '@/lib/supabase';
+import { PasswordInput } from '@/components/ui/password-input';
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
@@ -68,7 +69,7 @@ export function Register() {
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
               <div>
-                <Input id="password" name="password" type="password" />
+                <PasswordInput name="password" id="password" />
                 {passwordError && (
                   <p className="text-xs font-medium text-destructive">
                     {passwordError}

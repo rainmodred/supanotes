@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { useAuth } from '@/components/auth-provider';
 import { signInWithEmail } from '@/lib/supabase';
 import { Session, User } from '@supabase/supabase-js';
+import { PasswordInput } from '@/components/ui/password-input';
 
 export const LoginSchema = z.object({
   email: z.string().email(),
@@ -91,7 +92,7 @@ export function Login() {
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
               <div>
-                <Input id="password" name="password" type="password" />
+                <PasswordInput name="password" id="password" />
                 {passwordError && (
                   <p className="text-xs font-medium text-destructive">
                     {passwordError}

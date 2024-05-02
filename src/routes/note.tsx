@@ -10,6 +10,7 @@ import {
   useParams,
 } from 'react-router-dom';
 import { notesQuery } from './notes';
+import { INote } from '@/lib/types';
 
 export const action =
   (queryClient: QueryClient) =>
@@ -19,22 +20,23 @@ export const action =
     const { intent, ...rest } = updates;
     console.log('note action', updates, intent);
 
+    const noteId = rest.id.toString();
     if (intent === 'save') {
       const updatedNote = await updateNote(rest);
-      await queryClient.setQueryData(noteQuery(rest.id).queryKey, updatedNote);
+      await queryClient.setQueryData(noteQuery(noteId).queryKey, updatedNote);
       return { ok: true };
     }
     if (intent === 'delete') {
-      const { error } = await deleteNote(rest.id);
+      const { error } = await deleteNote(noteId);
       if (error) {
         throw json({ message: 'Delete error' }, { status: 404 });
       }
       queryClient.removeQueries({
-        queryKey: noteQuery(rest.id).queryKey,
+        queryKey: noteQuery(noteId).queryKey,
       });
 
-      queryClient.setQueryData(notesQuery.queryKey, oldData =>
-        oldData.filter(note => note.id !== rest.id),
+      queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData =>
+        oldData?.filter(note => note.id !== rest.id),
       );
 
       return redirect(`/notes`);
@@ -51,7 +53,7 @@ export const noteQuery = (noteId: string) => ({
 export const loader =
   (queryClient: QueryClient) =>
   async ({ params }: LoaderFunctionArgs) => {
-    const query = noteQuery(params.noteId);
+    const query = noteQuery(params.noteId!);
     const data = await queryClient.fetchQuery({ ...query });
     console.log('note loader', data);
 
@@ -62,7 +64,10 @@ export const loader =
 export function Note() {
   const initialData = useLoaderData();
   const params = useParams();
-  const { data: note } = useQuery({ ...noteQuery(params.noteId), initialData });
+  const { data: note } = useQuery({
+    ...noteQuery(params.noteId!),
+    initialData,
+  });
 
   return <Editor note={note} />;
 }

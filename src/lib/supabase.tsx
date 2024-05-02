@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { INote, ITag } from './types';
 
 const url = import.meta.env.VITE_URL;
 const anonKey = import.meta.env.VITE_ANON_KEY;
@@ -16,13 +17,7 @@ async function signUpNewUser(email: string, password: string) {
   return { data, error };
 }
 
-async function signInWithEmail({
-  email,
-  password,
-}: {
-  email: string;
-  password: string;
-}) {
+async function signInWithEmail(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -36,17 +31,14 @@ async function createNote({
   title,
   body,
   user_id,
-}: {
-  title: string;
-  body: string;
-  user_id: string;
-}) {
+}: Omit<INote, 'id' | 'created_at' | 'updated_at'>) {
   try {
     const { data } = await supabase
       .from('notes')
       .insert([{ title, body, user_id }])
-      .select();
-    return data.at(0);
+      .select()
+      .returns<INote[]>();
+    return data?.at(0);
   } catch (error) {
     console.log('error', error);
   }
@@ -57,35 +49,33 @@ async function updateNote({
   title,
   body,
   user_id,
-}: {
-  id: number;
-  title: string;
-  body: string;
-  user_id: string;
-}) {
+}: Omit<INote, 'created_at' | 'updated_at'>) {
   try {
     const { data } = await supabase
       .from('notes')
       .update({ id, title, body, user_id })
       .eq('id', id)
-      .select();
-    return data.at(0);
+      .select()
+      .returns<INote[]>();
+    return data?.at(0);
   } catch (error) {
     console.log('error', error);
   }
 }
 
-async function deleteNote(noteId: number) {
+async function deleteNote(noteId: string) {
   try {
-    return await supabase.from('notes').delete().eq('id', noteId);
+    const res = supabase.from('notes').delete().eq('id', noteId);
+    return res;
   } catch (error) {
     console.log('error', error);
+    return { error };
   }
 }
 
 async function fetchTags() {
   try {
-    const { data } = await supabase.from('tags').select('*');
+    const { data } = await supabase.from('tags').select('*').returns<ITag[]>();
     console.log('fetchTags', data);
     return data;
   } catch (error) {
@@ -97,7 +87,9 @@ async function createTag(name: string, userId: string) {
   try {
     const { data } = await supabase
       .from('tags')
-      .insert([{ name, user_id: userId }]);
+      .insert([{ name, user_id: userId }])
+      .select()
+      .returns<ITag>();
     console.log('createTag', data);
   } catch (error) {
     console.log('error', error);
@@ -106,7 +98,10 @@ async function createTag(name: string, userId: string) {
 
 async function fetchNotes() {
   try {
-    const { data } = await supabase.from('notes').select(`id, title`);
+    const { data } = await supabase
+      .from('notes')
+      .select(`id, title`)
+      .returns<Omit<INote, 'created_at' | 'updated_at' | 'body' | 'user_id'>>();
     console.log('fetchNotes', data);
     return data;
   } catch (error) {
@@ -116,9 +111,13 @@ async function fetchNotes() {
 
 async function fetchNote(noteId: string) {
   try {
-    const { data } = await supabase.from('notes').select().eq('id', noteId);
+    const { data } = await supabase
+      .from('notes')
+      .select()
+      .eq('id', noteId)
+      .returns<INote[]>();
     console.log('fetchNote', data);
-    return data.at(0);
+    return data?.at(0);
   } catch (error) {
     console.log('error', error);
   }

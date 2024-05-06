@@ -4,11 +4,12 @@ export interface INote {
   updated_at: string;
   title: string;
   body: string;
-  user_id: string;
+  tags: ITag[];
+  // user_id: string;
 }
 
 export interface ITag {
   id: string;
   name: string;
-  user_id: string;
+  // user_id: string;
 }

@@ -1,5 +1,11 @@
 import { Editor } from '@/components/editor';
-import { deleteNote, fetchNote, updateNote } from '@/lib/supabase';
+import {
+  addTagToNote,
+  createTag,
+  deleteNote,
+  fetchNote,
+  updateNote,
+} from '@/lib/supabase';
 import { QueryClient, useQuery } from '@tanstack/react-query';
 import {
   ActionFunctionArgs,
@@ -9,8 +15,8 @@ import {
   useLoaderData,
   useParams,
 } from 'react-router-dom';
-import { notesQuery } from './notes';
-import { INote } from '@/lib/types';
+import { notesQuery, tagsQuery } from './notes';
+import { INote, ITag } from '@/lib/types';
 
 export const action =
   (queryClient: QueryClient) =>
@@ -20,7 +26,7 @@ export const action =
     const { intent, ...rest } = updates;
     console.log('note action', updates, intent);
 
-    const noteId = rest.id.toString();
+    const noteId = rest.note_id.toString();
     if (intent === 'save') {
       const updatedNote = await updateNote(rest);
       await queryClient.setQueryData(noteQuery(noteId).queryKey, updatedNote);
@@ -40,6 +46,39 @@ export const action =
       );
 
       return redirect(`/notes`);
+    }
+
+    if (intent === 'create-tag') {
+      const returnedTag = await createTag(rest.tagName, rest.user_id);
+      if (!returnedTag) {
+        return { ok: false };
+      }
+
+      queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
+        if (oldData) {
+          return [...oldData, returnedTag];
+        }
+        return [returnedTag];
+      });
+      queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
+        if (oldData) {
+          return { ...oldData, tags: [...oldData.tags, returnedTag] };
+        }
+        return oldData;
+      });
+
+      await addTagToNote(noteId, returnedTag?.id);
+      return { ok: true };
+    }
+
+    if (intent === 'select-tag') {
+      await addTagToNote(noteId, rest.tag_id);
+
+      return { ok: true };
+    }
+
+    if (intent === 'unselect-tag') {
+      return { ok: true };
     }
 
     throw json({ message: 'Invalid intent' }, { status: 400 });
@@ -62,7 +101,9 @@ export const loader =
   };
 
 export function Note() {
-  const initialData = useLoaderData();
+  const initialData = useLoaderData() as Awaited<
+    ReturnType<ReturnType<typeof loader>>
+  >;
   const params = useParams();
   const { data: note } = useQuery({
     ...noteQuery(params.noteId!),

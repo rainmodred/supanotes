@@ -52,7 +52,9 @@ export const loader = (queryClient: QueryClient) => async () => {
 };
 
 export function Notes() {
-  const initialData = useLoaderData();
+  const initialData = useLoaderData() as Awaited<
+    ReturnType<ReturnType<typeof loader>>
+  >;
   const [notesResult, tagsResult] = useQueries({
     queries: [
       { ...notesQuery, initialData: initialData.notes },
@@ -129,19 +131,20 @@ export function Notes() {
               </Button>
 
               <TagForm />
-              {tags.map(tag => {
-                return (
-                  <Button
-                    key={tag.id}
-                    variant="outline"
-                    className="flex w-full justify-start gap-2 border-none"
-                    onClick={() => handleTagSelect('all')}
-                  >
-                    <Hash />
-                    {tag.name}
-                  </Button>
-                );
-              })}
+              {tags &&
+                tags.map(tag => {
+                  return (
+                    <Button
+                      key={tag.id}
+                      variant="outline"
+                      className="flex w-full justify-start gap-2 border-none"
+                      onClick={() => handleTagSelect('all')}
+                    >
+                      <Hash />
+                      {tag.name}
+                    </Button>
+                  );
+                })}
             </div>
           </div>
         </ResizablePanel>
@@ -161,20 +164,21 @@ export function Notes() {
             </div>
 
             <Input className="mb-6" placeholder="Search note or #tag" />
-            {notes.map(note => {
-              return (
-                <Link
-                  key={note.id}
-                  to={note.id.toString()}
-                  className={cn(
-                    buttonVariants({ variant: 'outline' }),
-                    'flex w-full justify-start gap-2 border-none',
-                  )}
-                >
-                  {note.title}
-                </Link>
-              );
-            })}
+            {notes &&
+              notes.map(note => {
+                return (
+                  <Link
+                    key={note.id}
+                    to={note.id.toString()}
+                    className={cn(
+                      buttonVariants({ variant: 'outline' }),
+                      'flex w-full justify-start gap-2 border-none',
+                    )}
+                  >
+                    {note.title}
+                  </Link>
+                );
+              })}
           </div>
         </ResizablePanel>
         <ResizableHandle />

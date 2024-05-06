@@ -75,9 +75,32 @@ async function deleteNote(noteId: string) {
 
 async function fetchTags() {
   try {
-    const { data } = await supabase.from('tags').select('*').returns<ITag[]>();
+    const { data } = await supabase
+      .from('tags')
+      .select(`id, name`)
+      .returns<ITag[]>();
     console.log('fetchTags', data);
     return data;
+  } catch (error) {
+    console.log('error', error);
+  }
+}
+
+async function addTagToNote(note_id: string, tag_id: string) {
+  try {
+    await supabase.from('notes_tags').insert({ note_id, tag_id });
+
+    //TODO: fixme, promise all
+  } catch (error) {
+    console.log('error', error);
+  }
+}
+
+async function deleteTagFromNote(note_id: string, tag_id: string) {
+  try {
+    await supabase.from('notes_tags').insert({ note_id, tag_id });
+
+    //TODO: fixme, promise all
   } catch (error) {
     console.log('error', error);
   }
@@ -87,10 +110,11 @@ async function createTag(name: string, userId: string) {
   try {
     const { data } = await supabase
       .from('tags')
-      .insert([{ name, user_id: userId }])
-      .select()
-      .returns<ITag>();
+      .insert({ name, user_id: userId })
+      .select(`id, name`)
+      .returns<ITag[]>();
     console.log('createTag', data);
+    return data?.at(0);
   } catch (error) {
     console.log('error', error);
   }
@@ -101,7 +125,9 @@ async function fetchNotes() {
     const { data } = await supabase
       .from('notes')
       .select(`id, title`)
-      .returns<Omit<INote, 'created_at' | 'updated_at' | 'body' | 'user_id'>>();
+      .returns<
+        Omit<INote, 'created_at' | 'updated_at' | 'body' | 'user_id'>[]
+      >();
     console.log('fetchNotes', data);
     return data;
   } catch (error) {
@@ -113,7 +139,16 @@ async function fetchNote(noteId: string) {
   try {
     const { data } = await supabase
       .from('notes')
-      .select()
+      .select(
+        `
+      id, 
+      created_at, 
+      updated_at, 
+      title, 
+      body, 
+      tags(id, name)
+    `,
+      )
       .eq('id', noteId)
       .returns<INote[]>();
     console.log('fetchNote', data);
@@ -131,6 +166,7 @@ export {
   fetchNotes,
   fetchNote,
   createTag,
+  addTagToNote,
   createNote,
   updateNote,
   deleteNote,

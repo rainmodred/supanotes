@@ -105,7 +105,17 @@ export function Editor({ note }: Props) {
 
                 console.log('onSelect', value);
               }}
-              onUnselect={value => console.log('onUnselect', value)}
+              onUnselect={value => {
+                const formData = new FormData();
+                formData.append('tag_id', value.id);
+                formData.append('intent', 'unselect-tag');
+                formData.append('user_id', session?.user.id);
+                formData.append('note_id', note?.id);
+
+                fetcher.submit(formData, { method: 'post' });
+
+                console.log('onUnselect', value);
+              }}
               placeholder="Tags..."
               creatable
               // emptyIndicator={

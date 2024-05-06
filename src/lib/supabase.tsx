@@ -98,7 +98,11 @@ async function addTagToNote(note_id: string, tag_id: string) {
 
 async function deleteTagFromNote(note_id: string, tag_id: string) {
   try {
-    await supabase.from('notes_tags').insert({ note_id, tag_id });
+    await supabase
+      .from('notes_tags')
+      .delete()
+      .eq('note_id', note_id)
+      .eq('tag_id', tag_id);
 
     //TODO: fixme, promise all
   } catch (error) {
@@ -167,6 +171,7 @@ export {
   fetchNote,
   createTag,
   addTagToNote,
+  deleteTagFromNote,
   createNote,
   updateNote,
   deleteNote,

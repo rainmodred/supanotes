@@ -3,6 +3,7 @@ import {
   addTagToNote,
   createTag,
   deleteNote,
+  deleteTagFromNote,
   fetchNote,
   updateNote,
 } from '@/lib/supabase';
@@ -78,6 +79,7 @@ export const action =
     }
 
     if (intent === 'unselect-tag') {
+      await deleteTagFromNote(noteId, rest.tag_id);
       return { ok: true };
     }
 

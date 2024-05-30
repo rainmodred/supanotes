@@ -80,6 +80,14 @@ export const action =
 
     if (intent === 'unselect-tag') {
       await deleteTagFromNote(noteId, rest.tag_id);
+      queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
+        if (oldData) {
+          return {
+            ...oldData,
+            tags: oldData.tags.filter(tag => tag.id !== rest.tag_id),
+          };
+        }
+      });
       return { ok: true };
     }
 

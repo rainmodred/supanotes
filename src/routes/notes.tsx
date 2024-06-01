@@ -7,6 +7,8 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { createTag, fetchNotes, fetchTags } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { QueryClient, useQueries } from '@tanstack/react-query';
@@ -93,44 +95,47 @@ export function Notes() {
     }
   };
 
-  return (
-    <div className="flex">
-      <div className="flex flex-col items-center justify-start p-2">
-        <Button onClick={collapsePanel} size="icon">
-          <Folder />
-        </Button>
-        <Button size="icon">
-          <LogOut />
-        </Button>
+  {
+    /* <div className="flex flex-col items-center justify-start p-2">
+  <Button onClick={collapsePanel} size="icon">
+    <Folder />
+  </Button>
+  <Button size="icon">
+    <LogOut />
+  </Button>
 
-        <ModeToggle />
-      </div>
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="min-h-screen  rounded-lg border"
-      >
-        <ResizablePanel defaultSize={15} collapsible ref={ref}>
-          <div className="py-4">
-            <div className="flex flex-col items-start">
-              {/*TODO: active */}
-              <Button
-                variant="outline"
-                className="flex w-full justify-start gap-2 border-none bg-slate-200"
-                onClick={() => handleTagSelect('all')}
-              >
-                <Notebook />
-                All Notes
-              </Button>
-              <Button
+  <ModeToggle />
+</div> */
+  }
+
+  return (
+    <ResizablePanelGroup
+      direction="horizontal"
+      className="min-h-screen rounded-lg border"
+    >
+      <ResizablePanel defaultSize={15} collapsible ref={ref}>
+        <div className="h-full py-4">
+          <div className="flex h-full flex-col items-start">
+            {/*TODO: active */}
+            <Button
+              variant="outline"
+              className="flex w-full justify-start gap-2 border-none bg-slate-200"
+              onClick={() => handleTagSelect('all')}
+            >
+              <Notebook size="16px" />
+              All Notes
+            </Button>
+            {/* <Button
                 variant="outline"
                 className="flex w-full justify-start gap-2 border-none"
                 onClick={() => handleTagSelect('all')}
               >
                 <Trash />
                 Trash
-              </Button>
+              </Button> */}
 
-              <TagForm />
+            <TagForm />
+            <ScrollArea className="h-full w-full">
               {tags &&
                 tags.map(tag => {
                   return (
@@ -140,30 +145,32 @@ export function Notes() {
                       className="flex w-full justify-start gap-2 border-none"
                       onClick={() => handleTagSelect('all')}
                     >
-                      <Hash />
+                      <Hash size="16px" />
                       {tag.name}
                     </Button>
                   );
                 })}
-            </div>
+            </ScrollArea>
           </div>
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={20} collapsible ref={ref}>
-          <div className="py-4">
-            <div className="flex items-center justify-between px-4">
-              <p>Notes</p>
-              <Link
-                to="new"
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'icon' }),
-                )}
-              >
-                <Plus />
-              </Link>
-            </div>
+        </div>
+      </ResizablePanel>
+      <ResizableHandle />
+      <ResizablePanel defaultSize={20} collapsible ref={ref}>
+        <div className="h-full py-4 pb-32">
+          <div className="flex items-center justify-between px-4 py-2">
+            <p>Notes</p>
+            <Link
+              to="new"
+              className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+            >
+              <Plus size="16px" />
+            </Link>
+          </div>
 
+          <div className="px-4">
             <Input className="mb-6" placeholder="Search note or #tag" />
+          </div>
+          <ScrollArea className="h-full">
             {notes &&
               notes.map(note => {
                 return (
@@ -179,16 +186,16 @@ export function Notes() {
                   </Link>
                 );
               })}
-          </div>
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={65} collapsible ref={editorPanel}>
-          <div className="h-full p-4">
-            <Outlet />
-          </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </div>
+          </ScrollArea>
+        </div>
+      </ResizablePanel>
+      <ResizableHandle />
+      <ResizablePanel defaultSize={65} collapsible ref={editorPanel}>
+        <div className="h-full p-4">
+          <Outlet />
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }
 
@@ -226,7 +233,7 @@ function TagForm() {
 
   return (
     <>
-      <div className="flex w-full justify-between p-4">
+      <div className="flex w-full items-center justify-between px-4 py-2">
         <span>Tags:</span>
         <Button
           onClick={() => {
@@ -234,25 +241,32 @@ function TagForm() {
             tagInputRef?.current?.focus();
           }}
           size="icon"
-          variant="outline"
+          variant="ghost"
         >
-          <Plus />
+          <Plus size="16px" />
         </Button>
       </div>
 
-      <fetcher.Form
-        method="post"
-        className={cn(
-          'flex w-full items-center gap-2 px-4 py-2',
-          !addingTag && 'opacity-0',
-        )}
-        ref={formRef}
-        onSubmit={e => handleSubmit(e)}
-      >
-        <Hash />
-        <input name="user_id" defaultValue={session?.user.id} type="hidden" />
-        <Input name="addedTag" ref={tagInputRef} onBlur={handleResetTag} />
-      </fetcher.Form>
+      {addingTag && (
+        <fetcher.Form
+          method="post"
+          className={cn(
+            'flex w-full items-center gap-2 px-4 py-2',
+            !addingTag && 'opacity-0',
+          )}
+          ref={formRef}
+          onSubmit={e => handleSubmit(e)}
+        >
+          <Hash size="16px" />
+          <input name="user_id" defaultValue={session?.user.id} type="hidden" />
+          <Input
+            placeholder="Tag name"
+            name="addedTag"
+            ref={tagInputRef}
+            onBlur={handleResetTag}
+          />
+        </fetcher.Form>
+      )}
     </>
   );
 }

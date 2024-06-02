@@ -45,8 +45,10 @@ export const notesQuery = {
 };
 
 export const loader = (queryClient: QueryClient) => async () => {
-  const tags = await queryClient.fetchQuery({ ...tagsQuery });
-  const notes = await queryClient.fetchQuery({ ...notesQuery });
+  const [tags, notes] = await Promise.all([
+    queryClient.fetchQuery({ ...tagsQuery }),
+    queryClient.fetchQuery({ ...notesQuery }),
+  ]);
   return { notes, tags };
 };
 

@@ -8,7 +8,9 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { tagsQuery } from '@/features/tags/api/get-tags';
+import { TagsList } from '@/features/tags/components/tags-list';
 import { createTag, fetchNotes, fetchTags } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { QueryClient, useQueries } from '@tanstack/react-query';
@@ -37,11 +39,6 @@ export const action =
     return null;
   };
 
-export const tagsQuery = {
-  queryKey: ['tags'],
-  queryFn: () => fetchTags(),
-};
-
 export const notesQuery = {
   queryKey: ['notes'],
   queryFn: () => fetchNotes(),
@@ -63,37 +60,48 @@ export function Notes() {
       { ...tagsQuery, initialData: initialData.tags },
     ],
   });
-  const { data: notes } = notesResult;
-  const { data: tags } = tagsResult;
 
-  const [selectedTag, setSelectedTag] = useState('all');
+  const { data: tags, isLoading: isTagsLoading } = tagsResult;
+  const { data: notes, isLoading: isNotesLoading } = notesResult;
+
+  const [selectedTagName, setSelectedTagName] = useState('all');
 
   function handleTagSelect(tagId: string) {
-    setSelectedTag(tagId);
+    setSelectedTagName(tagId);
   }
 
+  let filteredNotes: typeof notes = [];
+  if (selectedTagName === 'all') {
+    filteredNotes = notes;
+  } else {
+    filteredNotes = notes?.filter(note =>
+      note.tags.some(tag => tag.name === selectedTagName),
+    );
+  }
+
+  //TODO: mobile layout
   const ref = useRef<ImperativePanelHandle>(null);
   const editorPanel = useRef<ImperativePanelHandle>(null);
 
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 720px)');
-    if (mql.matches) {
-      const panel = editorPanel.current;
-      panel?.collapse();
-    }
-  }, []);
+  // useEffect(() => {
+  //   const mql = window.matchMedia('(max-width: 720px)');
+  //   if (mql.matches) {
+  //     const panel = editorPanel.current;
+  //     panel?.collapse();
+  //   }
+  // }, []);
 
-  const collapsePanel = () => {
-    const panel = ref.current;
-    if (!panel) {
-      return;
-    }
-    if (panel.isCollapsed()) {
-      panel.expand();
-    } else if (panel.isExpanded()) {
-      panel.collapse();
-    }
-  };
+  // const collapsePanel = () => {
+  //   const panel = ref.current;
+  //   if (!panel) {
+  //     return;
+  //   }
+  //   if (panel.isCollapsed()) {
+  //     panel.expand();
+  //   } else if (panel.isExpanded()) {
+  //     panel.collapse();
+  //   }
+  // };
 
   {
     /* <div className="flex flex-col items-center justify-start p-2">
@@ -119,7 +127,7 @@ export function Notes() {
             {/*TODO: active */}
             <Button
               variant="outline"
-              className="flex w-full justify-start gap-2 border-none bg-slate-200"
+              className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
               onClick={() => handleTagSelect('all')}
             >
               <Notebook size="16px" />
@@ -136,20 +144,19 @@ export function Notes() {
 
             <TagForm />
             <ScrollArea className="h-full w-full">
-              {tags &&
-                tags.map(tag => {
+              {isTagsLoading
+                ? Array.from({ length: 20 }).map((_, i) => {
                   return (
-                    <Button
-                      key={tag.id}
-                      variant="outline"
-                      className="flex w-full justify-start gap-2 border-none"
-                      onClick={() => handleTagSelect('all')}
-                    >
-                      <Hash size="16px" />
-                      {tag.name}
-                    </Button>
-                  );
-                })}
+                      <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />
+                    );
+                  })
+                : tags && (
+                    <TagsList
+                      tags={tags}
+                      onTagSelect={handleTagSelect}
+                      selectedTagName={selectedTagName}
+                    />
+                  )}
             </ScrollArea>
           </div>
         </div>
@@ -171,8 +178,12 @@ export function Notes() {
             <Input className="mb-6" placeholder="Search note or #tag" />
           </div>
           <ScrollArea className="h-full">
-            {notes &&
-              notes.map(note => {
+            {isNotesLoading
+              ? Array.from({ length: 20 }).map((_, i) => {
+                  return <Skeleton key={`sn-${i}`} className="mb-2 h-[20px]" />;
+                })
+              : filteredNotes &&
+                filteredNotes.map(note => {
                 return (
                   <Link
                     key={note.id}

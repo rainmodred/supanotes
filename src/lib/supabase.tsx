@@ -73,19 +73,6 @@ async function deleteNote(noteId: string) {
   }
 }
 
-async function fetchTags() {
-  try {
-    const { data } = await supabase
-      .from('tags')
-      .select(`id, name`)
-      .returns<ITag[]>();
-    console.log('fetchTags', data);
-    return data;
-  } catch (error) {
-    console.log('error', error);
-  }
-}
-
 async function addTagToNote(note_id: string, tag_id: string) {
   try {
     await supabase.from('notes_tags').insert({ note_id, tag_id });
@@ -128,7 +115,7 @@ async function fetchNotes() {
   try {
     const { data } = await supabase
       .from('notes')
-      .select(`id, title`)
+      .select(`id, title, tags(id, name)`)
       .returns<
         Omit<INote, 'created_at' | 'updated_at' | 'body' | 'user_id'>[]
       >();
@@ -166,7 +153,6 @@ export {
   supabase,
   signUpNewUser,
   signInWithEmail,
-  fetchTags,
   fetchNotes,
   fetchNote,
   createTag,

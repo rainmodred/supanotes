@@ -20,20 +20,15 @@ import {
 } from './routes/note';
 import { ProtectedRoute } from './components/protected-route';
 import { NewNote, action as newNoteAction } from './routes/new';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { queryClient } from './lib/react-query';
 
 function ErrorBoundary() {
   let error = useRouteError();
   console.error(error);
   return <div>Dang!</div>;
 }
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { refetchOnWindowFocus: false, staleTime: 1000 * 60 * 10 },
-  },
-});
 
 const router = createBrowserRouter([
   {
@@ -44,7 +39,6 @@ const router = createBrowserRouter([
       </PublicRoute>
     ),
   },
-
   {
     path: '/notes',
     element: (
@@ -69,7 +63,6 @@ const router = createBrowserRouter([
       },
     ],
   },
-
   {
     path: '/login',
     element: (

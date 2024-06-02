@@ -9,8 +9,8 @@ import { useAuth } from './auth-provider';
 import { MultipleSelector, Option } from './ui/multiple-selector';
 import { INote } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
-import { tagsQuery } from '@/routes/notes';
 import { createTag } from '@/lib/supabase';
+import { tagsQuery } from '@/features/tags/api/get-tags';
 
 //TOOD: types
 interface Props {

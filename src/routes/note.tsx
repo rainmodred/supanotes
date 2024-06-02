@@ -16,8 +16,9 @@ import {
   useLoaderData,
   useParams,
 } from 'react-router-dom';
-import { notesQuery, tagsQuery } from './notes';
+import { notesQuery } from './notes';
 import { INote, ITag } from '@/lib/types';
+import { tagsQuery } from '@/features/tags/api/get-tags';
 
 export const action =
   (queryClient: QueryClient) =>

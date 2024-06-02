@@ -1,5 +1,3 @@
-import { useAuth } from '@/components/auth-provider';
-import { ModeToggle } from '@/components/mode-toggle';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -8,26 +6,27 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
+import { notesQuery } from '@/features/notes/api/get-notes';
+import { NotesList } from '@/features/notes/components/notes-list';
 import { tagsQuery } from '@/features/tags/api/get-tags';
 import { CreateTag } from '@/features/tags/components/create-tag';
 import { TagsList } from '@/features/tags/components/tags-list';
-import { createTag, fetchNotes, fetchTags } from '@/lib/supabase';
+import { createTag } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import { QueryClient, useQueries } from '@tanstack/react-query';
-import { Folder, Hash, LogOut, Notebook, Plus, Trash } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { QueryClient } from '@tanstack/react-query';
+import { Notebook, Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import {
   ActionFunctionArgs,
   Link,
   Outlet,
-  useFetcher,
+  defer,
   useLoaderData,
 } from 'react-router-dom';
 
 export const action =
-  (queryClient: QueryClient) =>
+  () =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const newTag = formData.get('addedTag');
@@ -40,46 +39,21 @@ export const action =
     return null;
   };
 
-export const notesQuery = {
-  queryKey: ['notes'],
-  queryFn: () => fetchNotes(),
-};
-
 export const loader = (queryClient: QueryClient) => async () => {
-  const [tags, notes] = await Promise.all([
-    queryClient.fetchQuery({ ...tagsQuery }),
-    queryClient.fetchQuery({ ...notesQuery }),
-  ]);
-  return { notes, tags };
+  return defer({
+    getNotes: queryClient.fetchQuery({ ...notesQuery }),
+    getTags: queryClient.fetchQuery({ ...tagsQuery }),
+  });
 };
 
 export function Notes() {
   const initialData = useLoaderData() as Awaited<
     ReturnType<ReturnType<typeof loader>>
   >;
-  const [notesResult, tagsResult] = useQueries({
-    queries: [
-      { ...notesQuery, initialData: initialData.notes },
-      { ...tagsQuery, initialData: initialData.tags },
-    ],
-  });
-
-  const { data: tags, isLoading: isTagsLoading } = tagsResult;
-  const { data: notes, isLoading: isNotesLoading } = notesResult;
-
   const [selectedTagName, setSelectedTagName] = useState('all');
 
   function handleTagSelect(tagId: string) {
     setSelectedTagName(tagId);
-  }
-
-  let filteredNotes: typeof notes = [];
-  if (selectedTagName === 'all') {
-    filteredNotes = notes;
-  } else {
-    filteredNotes = notes?.filter(note =>
-      note.tags.some(tag => tag.name === selectedTagName),
-    );
   }
 
   //TODO: mobile layout
@@ -127,7 +101,6 @@ export function Notes() {
       <ResizablePanel defaultSize={15} collapsible ref={ref}>
         <div className="h-full py-4">
           <div className="flex h-full flex-col items-start">
-            {/*TODO: active */}
             <Button
               variant="outline"
               className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
@@ -147,19 +120,11 @@ export function Notes() {
 
             <CreateTag />
             <ScrollArea className="h-full w-full">
-              {isTagsLoading
-                ? Array.from({ length: 20 }).map((_, i) => {
-                  return (
-                      <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />
-                    );
-                  })
-                : tags && (
-                    <TagsList
-                      tags={tags}
-                      onTagSelect={handleTagSelect}
-                      selectedTagName={selectedTagName}
-                    />
-                  )}
+              <TagsList
+                selectedTagName={selectedTagName}
+                onTagSelect={handleTagSelect}
+                getTags={initialData.getTags}
+              />
             </ScrollArea>
           </div>
         </div>
@@ -181,25 +146,10 @@ export function Notes() {
             <Input className="mb-6" placeholder="Search note or #tag" />
           </div>
           <ScrollArea className="h-full">
-            {isNotesLoading
-              ? Array.from({ length: 20 }).map((_, i) => {
-                  return <Skeleton key={`sn-${i}`} className="mb-2 h-[20px]" />;
-                })
-              : filteredNotes &&
-                filteredNotes.map(note => {
-                return (
-                  <Link
-                    key={note.id}
-                    to={note.id.toString()}
-                    className={cn(
-                      buttonVariants({ variant: 'outline' }),
-                      'flex w-full justify-start gap-2 border-none',
-                    )}
-                  >
-                    {note.title}
-                  </Link>
-                );
-              })}
+            <NotesList
+              selectedTagName={selectedTagName}
+              getNotes={initialData.getNotes}
+            />
           </ScrollArea>
         </div>
       </ResizablePanel>

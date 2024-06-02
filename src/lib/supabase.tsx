@@ -111,21 +111,6 @@ async function createTag(name: string, userId: string) {
   }
 }
 
-async function fetchNotes() {
-  try {
-    const { data } = await supabase
-      .from('notes')
-      .select(`id, title, tags(id, name)`)
-      .returns<
-        Omit<INote, 'created_at' | 'updated_at' | 'body' | 'user_id'>[]
-      >();
-    console.log('fetchNotes', data);
-    return data;
-  } catch (error) {
-    console.log('error', error);
-  }
-}
-
 async function fetchNote(noteId: string) {
   try {
     const { data } = await supabase
@@ -153,7 +138,6 @@ export {
   supabase,
   signUpNewUser,
   signInWithEmail,
-  fetchNotes,
   fetchNote,
   createTag,
   addTagToNote,

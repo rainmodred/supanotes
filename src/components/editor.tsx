@@ -61,17 +61,36 @@ export function Editor({ note }: Props) {
     <div className="flex h-full flex-col">
       <div className="h-full ">
         <fetcher.Form method="post" className="h-full" ref={formRef.current}>
-          <div className="flex">
+          <div className="flex flex-col">
             {session && (
               <input name="user_id" value={session?.user.id} type="hidden" />
             )}
             {note && <input name="note_id" value={note.id} type="hidden" />}
-            <Input
-              name="title"
-              placeholder="title"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-            />
+            <div className="flex">
+              <Input
+                name="title"
+                placeholder="title"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+              />
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                onClick={changeMode}
+              >
+                {mode === 'edit' && <Pencil />}
+                {mode === 'read' && <Eye />}
+              </Button>
+
+              <Button variant="outline" name="intent" value="save">
+                Save
+              </Button>
+
+              <Button variant="outline" name="intent" value="delete">
+                Delete
+              </Button>
+            </div>
             <MultipleSelector
               value={value}
               defaultOptions={
@@ -124,23 +143,6 @@ export function Editor({ note }: Props) {
               //   </p>
               // }
             />
-            <Button
-              type="button"
-              size="icon"
-              variant="outline"
-              onClick={changeMode}
-            >
-              {mode === 'edit' && <Pencil />}
-              {mode === 'read' && <Eye />}
-            </Button>
-
-            <Button variant="outline" name="intent" value="save">
-              Save
-            </Button>
-
-            <Button variant="outline" name="intent" value="delete">
-              Delete
-            </Button>
           </div>
           {mode === 'edit' && (
             <Textarea

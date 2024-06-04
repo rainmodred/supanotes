@@ -2,8 +2,8 @@ import { ActionFunctionArgs, json, redirect } from 'react-router-dom';
 import { Editor } from '@/components/editor';
 import { createNote } from '@/lib/supabase';
 import { QueryClient } from '@tanstack/react-query';
-import { notesQuery } from './notes';
-import { noteQuery } from './note';
+import { noteQuery } from '@/features/note/api/get-note';
+import { notesQuery } from '@/features/notes/api/get-notes';
 
 export const action =
   (queryClient: QueryClient) =>
@@ -17,7 +17,7 @@ export const action =
     if (intent === 'save') {
       const note = await createNote(values);
 
-      queryClient.setQueryData(noteQuery(note.id).queryKey, note);
+      queryClient.setQueryData(noteQuery(note.id, queryClient).queryKey, note);
       queryClient.setQueryData(notesQuery.queryKey, oldData => [
         ...oldData,
         {

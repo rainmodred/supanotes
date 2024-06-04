@@ -10,10 +10,17 @@ async function fetchNotes() {
   try {
     const { data } = await supabase
       .from('notes')
-      .select(`id, title, tags(id, name)`)
-      .returns<
-        Omit<INote, 'created_at' | 'updated_at' | 'body' | 'user_id'>[]
-      >();
+      .select(
+        `
+      id, 
+      created_at, 
+      updated_at, 
+      title, 
+      body, 
+      tags(id, name)
+    `,
+      )
+      .returns<Omit<INote, 'user_id'>[]>();
     console.log('fetchNotes', data);
     return data;
   } catch (error) {

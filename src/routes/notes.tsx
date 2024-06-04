@@ -41,8 +41,8 @@ export const action =
 
 export const loader = (queryClient: QueryClient) => async () => {
   return defer({
-    getNotes: queryClient.fetchQuery({ ...notesQuery }),
-    getTags: queryClient.fetchQuery({ ...tagsQuery }),
+    notes: queryClient.fetchQuery({ ...notesQuery }),
+    tags: queryClient.fetchQuery({ ...tagsQuery }),
   });
 };
 
@@ -123,7 +123,7 @@ export function Notes() {
               <TagsList
                 selectedTagName={selectedTagName}
                 onTagSelect={handleTagSelect}
-                getTags={initialData.getTags}
+                tags={initialData.tags}
               />
             </ScrollArea>
           </div>
@@ -148,7 +148,7 @@ export function Notes() {
           <ScrollArea className="h-full">
             <NotesList
               selectedTagName={selectedTagName}
-              getNotes={initialData.getNotes}
+              notes={initialData.notes}
             />
           </ScrollArea>
         </div>

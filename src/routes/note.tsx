@@ -4,21 +4,24 @@ import {
   createTag,
   deleteNote,
   deleteTagFromNote,
-  fetchNote,
   updateNote,
 } from '@/lib/supabase';
-import { QueryClient, useQuery } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import {
   ActionFunctionArgs,
+  Await,
   LoaderFunctionArgs,
+  defer,
   json,
   redirect,
   useLoaderData,
-  useParams,
 } from 'react-router-dom';
-import { notesQuery } from './notes';
 import { INote, ITag } from '@/lib/types';
 import { tagsQuery } from '@/features/tags/api/get-tags';
+import { notesQuery } from '@/features/notes/api/get-notes';
+import { noteQuery } from '@/features/note/api/get-note';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export const action =
   (queryClient: QueryClient) =>
@@ -29,9 +32,10 @@ export const action =
     console.log('note action', updates, intent);
 
     const noteId = rest.note_id.toString();
+    const { queryKey } = noteQuery(noteId, queryClient);
     if (intent === 'save') {
       const updatedNote = await updateNote(rest);
-      await queryClient.setQueryData(noteQuery(noteId).queryKey, updatedNote);
+      await queryClient.setQueryData(queryKey, updatedNote);
       return { ok: true };
     }
     if (intent === 'delete') {
@@ -40,7 +44,7 @@ export const action =
         throw json({ message: 'Delete error' }, { status: 404 });
       }
       queryClient.removeQueries({
-        queryKey: noteQuery(noteId).queryKey,
+        queryKey,
       });
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData =>
@@ -62,7 +66,7 @@ export const action =
         }
         return [returnedTag];
       });
-      queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
+      queryClient.setQueryData<INote>(queryKey, oldData => {
         if (oldData) {
           return { ...oldData, tags: [...oldData.tags, returnedTag] };
         }
@@ -81,7 +85,7 @@ export const action =
 
     if (intent === 'unselect-tag') {
       await deleteTagFromNote(noteId, rest.tag_id);
-      queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
+      queryClient.setQueryData<INote>(queryKey, oldData => {
         if (oldData) {
           return {
             ...oldData,
@@ -95,31 +99,31 @@ export const action =
     throw json({ message: 'Invalid intent' }, { status: 400 });
   };
 
-export const noteQuery = (noteId: string) => ({
-  queryKey: ['notes', noteId],
-  queryFn: async () => fetchNote(noteId),
-});
-
 export const loader =
   (queryClient: QueryClient) =>
   async ({ params }: LoaderFunctionArgs) => {
-    const query = noteQuery(params.noteId!);
-    const data = await queryClient.fetchQuery({ ...query });
-    console.log('note loader', data);
-
-    if (!data) throw new Response('', { status: 404 });
-    return data;
+    const query = noteQuery(params.noteId!, queryClient);
+    return defer({ note: queryClient.fetchQuery({ ...query }) });
   };
 
 export function Note() {
   const initialData = useLoaderData() as Awaited<
     ReturnType<ReturnType<typeof loader>>
   >;
-  const params = useParams();
-  const { data: note } = useQuery({
-    ...noteQuery(params.noteId!),
-    initialData,
-  });
 
-  return <Editor note={note} />;
+  return (
+    <Suspense
+      fallback={Array.from({ length: 5 }).map((_, i) => {
+        return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
+      })}
+    >
+      <Await resolve={initialData.note}>
+        {note => {
+          return <Editor note={note} />;
+        }}
+      </Await>
+    </Suspense>
+  );
+
+  return;
 }

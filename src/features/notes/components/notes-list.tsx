@@ -5,17 +5,21 @@ import { FilteredNotes } from './filtered-notes';
 
 interface Props {
   selectedTagName: string;
-  getNotes: Promise<unknown>;
+  notes: Promise<unknown>;
 }
 
-export function NotesList({ selectedTagName, getNotes }: Props) {
+export function NotesList({ selectedTagName, notes }: Props) {
   return (
     <Suspense
-      fallback={Array.from({ length: 20 }).map((_, i) => {
-        return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
-      })}
+      fallback={
+        <div className="px-2">
+          {Array.from({ length: 20 }).map((_, i) => {
+            return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
+          })}
+        </div>
+      }
     >
-      <Await resolve={getNotes}>
+      <Await resolve={notes}>
         {notes => {
           return <FilteredNotes notes={notes} tagName={selectedTagName} />;
         }}

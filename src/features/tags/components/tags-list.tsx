@@ -7,17 +7,21 @@ import { Await } from 'react-router-dom';
 interface Props {
   selectedTagName: string;
   onTagSelect: (tagName: string) => void;
-  getTags: Promise<unknown>;
+  tags: Promise<unknown>;
 }
 
-export function TagsList({ selectedTagName, onTagSelect, getTags }: Props) {
+export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
   return (
     <Suspense
-      fallback={Array.from({ length: 20 }).map((_, i) => {
-        return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
-      })}
+      fallback={
+        <div className="px-2">
+          {Array.from({ length: 20 }).map((_, i) => {
+            return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
+          })}
+        </div>
+      }
     >
-      <Await resolve={getTags}>
+      <Await resolve={tags}>
         {tags => {
           return tags.map(tag => {
             return (

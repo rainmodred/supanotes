@@ -8,12 +8,13 @@ import { buttonVariants } from '@/components/ui/button';
 interface Props {
   notes: INote[];
   tagName: string;
+  search: string;
 }
 
-export function FilteredNotes({ notes, tagName }: Props) {
+export function FilteredNotes({ notes, tagName, search }: Props) {
   const filteredNotes = useMemo(
-    () => filterNotes(notes, tagName),
-    [notes, tagName],
+    () => filterNotes(notes, tagName, search),
+    [notes, tagName, search],
   );
   return filteredNotes.map(note => {
     return (

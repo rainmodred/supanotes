@@ -142,15 +142,10 @@ export function Notes() {
             </Link>
           </div>
 
-          <div className="px-4">
-            <Input className="mb-6" placeholder="Search note or #tag" />
-          </div>
-          <ScrollArea className="h-full">
-            <NotesList
-              selectedTagName={selectedTagName}
-              notes={initialData.notes}
-            />
-          </ScrollArea>
+          <NotesList
+            selectedTagName={selectedTagName}
+            notes={initialData.notes}
+          />
         </div>
       </ResizablePanel>
       <ResizableHandle />

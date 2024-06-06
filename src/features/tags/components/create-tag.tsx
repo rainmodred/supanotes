@@ -72,7 +72,7 @@ export function CreateTag() {
           <input name="user_id" defaultValue={session?.user.id} type="hidden" />
           <div className="w-full">
             <Input
-              placeholder="Tag name"
+              placeholder="Add tag"
               name="addedTag"
               ref={tagInputRef}
               onBlur={handleResetTag}

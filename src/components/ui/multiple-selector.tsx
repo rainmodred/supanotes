@@ -279,7 +279,11 @@ const MultipleSelector = React.forwardRef<
     }, [debouncedSearchTerm, groupBy, open, triggerSearchOnFocus]);
 
     const CreatableItem = () => {
-      if (!creatable) return undefined;
+      if (
+        !creatable ||
+        arrayOptions?.some(option => option.value === inputValue)
+      )
+        return undefined;
 
       const Item = (
         <CommandItem

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { INote, ITag } from './types';
+import { INote } from './types';
 
 const url = import.meta.env.VITE_URL;
 const anonKey = import.meta.env.VITE_ANON_KEY;
@@ -97,25 +97,10 @@ async function deleteTagFromNote(note_id: string, tag_id: string) {
   }
 }
 
-async function createTag(name: string, userId: string) {
-  try {
-    const { data } = await supabase
-      .from('tags')
-      .insert({ name, user_id: userId })
-      .select(`id, name`)
-      .returns<ITag[]>();
-    console.log('createTag', data);
-    return data?.at(0);
-  } catch (error) {
-    console.log('error', error);
-  }
-}
-
 export {
   supabase,
   signUpNewUser,
   signInWithEmail,
-  createTag,
   addTagToNote,
   deleteTagFromNote,
   createNote,

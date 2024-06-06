@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Hash } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Suspense } from 'react';
-import { Await } from 'react-router-dom';
+import { Await, useFetchers } from 'react-router-dom';
 
 interface Props {
   selectedTagName: string;
@@ -11,6 +11,19 @@ interface Props {
 }
 
 export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
+  //WTF
+  const fetchers = useFetchers();
+  const tagFetchers = fetchers
+    .filter(fetcher => {
+      return fetcher.formAction?.startsWith('/notes');
+    })
+    .map(({ formData }) => {
+      return {
+        id: '1',
+        name: formData?.get('addedTag'),
+      };
+    });
+
   return (
     <Suspense
       fallback={
@@ -23,7 +36,7 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
     >
       <Await resolve={tags}>
         {tags => {
-          return tags.map(tag => {
+          return [...tags, ...tagFetchers].map(tag => {
             return (
               <Button
                 key={tag.id}

@@ -9,7 +9,6 @@ import { useAuth } from './auth-provider';
 import { MultipleSelector, Option } from './ui/multiple-selector';
 import { INote } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
-import { createTag } from '@/lib/supabase';
 import { tagsQuery } from '@/features/tags/api/get-tags';
 
 //TOOD: types
@@ -22,6 +21,7 @@ export function Editor({ note }: Props) {
   const [title, setTitle] = useState(note?.title ?? '');
   const [body, setBody] = useState(note?.body ?? '');
   const { data: allTags } = useQuery({ ...tagsQuery });
+
   console.log('EDITOR', { allTags, note });
 
   const formRef = useRef();
@@ -93,7 +93,16 @@ export function Editor({ note }: Props) {
             </div>
             <MultipleSelector
               value={value}
-              defaultOptions={
+              // defaultOptions={
+              //   allTags?.map(({ id, name }) => {
+              //     return {
+              //       id,
+              //       label: name,
+              //       value: name,
+              //     };
+              //   }) ?? []
+              // }
+              options={
                 allTags?.map(({ id, name }) => {
                   return {
                     id,
@@ -136,7 +145,7 @@ export function Editor({ note }: Props) {
                 console.log('onUnselect', value);
               }}
               placeholder="Tags..."
-              creatable
+              creatable={allTags?.some(tag => tag.name === value)}
               // emptyIndicator={
               //   <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
               //     no results found.

@@ -1,5 +1,4 @@
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -8,10 +7,11 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { NotesList } from '@/features/notes/components/notes-list';
+import { createTag } from '@/features/tags/api/create-tag';
 import { tagsQuery } from '@/features/tags/api/get-tags';
 import { CreateTag } from '@/features/tags/components/create-tag';
 import { TagsList } from '@/features/tags/components/tags-list';
-import { createTag } from '@/lib/supabase';
+import { ITag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { QueryClient } from '@tanstack/react-query';
 import { Notebook, Plus } from 'lucide-react';
@@ -26,16 +26,19 @@ import {
 } from 'react-router-dom';
 
 export const action =
-  () =>
+  (queryClient: QueryClient) =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
-    const newTag = formData.get('addedTag');
-    const userId = formData.get('user_id');
+    const newTag = formData.get('addedTag')?.toString().trim();
+    const userId = formData.get('user_id')?.toString();
 
     if (newTag && userId) {
-      newTag.toString().trim();
-      await createTag(newTag.toString().trim(), userId.toString());
+      const returnedTag = await createTag(newTag, userId);
+      queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
+        return [...oldData, returnedTag];
+      });
     }
+
     return null;
   };
 

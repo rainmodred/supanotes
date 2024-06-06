@@ -1,7 +1,6 @@
 import { Editor } from '@/components/editor';
 import {
   addTagToNote,
-  createTag,
   deleteNote,
   deleteTagFromNote,
   updateNote,
@@ -17,11 +16,12 @@ import {
   useLoaderData,
 } from 'react-router-dom';
 import { INote, ITag } from '@/lib/types';
-import { tagsQuery } from '@/features/tags/api/get-tags';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { noteQuery } from '@/features/note/api/get-note';
 import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { createTag } from '@/features/tags/api/create-tag';
+import { tagsQuery } from '@/features/tags/api/get-tags';
 
 export const action =
   (queryClient: QueryClient) =>

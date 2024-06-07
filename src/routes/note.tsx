@@ -1,10 +1,4 @@
-import { Editor } from '@/components/editor';
-import {
-  addTagToNote,
-  deleteNote,
-  deleteTagFromNote,
-  updateNote,
-} from '@/lib/supabase';
+import { Editor } from '@/features/note/components/editor';
 import { QueryClient } from '@tanstack/react-query';
 import {
   ActionFunctionArgs,
@@ -22,6 +16,10 @@ import { Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { createTag } from '@/features/tags/api/create-tag';
 import { tagsQuery } from '@/features/tags/api/get-tags';
+import { updateNote } from '@/features/note/api/update-note';
+import { deleteNote } from '@/features/note/api/delete-note';
+import { removeTag } from '@/features/note/api/remove-tag';
+import { addTag } from '@/features/note/api/add-tag';
 
 export const action =
   (queryClient: QueryClient) =>
@@ -35,14 +33,17 @@ export const action =
     const { queryKey } = noteQuery(noteId, queryClient);
     if (intent === 'save') {
       const updatedNote = await updateNote(rest);
-      await queryClient.setQueryData(queryKey, updatedNote);
+      await queryClient.setQueryData(queryKey, oldData => {
+        return {
+          ...oldData,
+          body: updatedNote.body,
+          updated_at: updatedNote.updated_at,
+        };
+      });
       return { ok: true };
     }
     if (intent === 'delete') {
-      const { error } = await deleteNote(noteId);
-      if (error) {
-        throw json({ message: 'Delete error' }, { status: 404 });
-      }
+      await deleteNote(noteId);
       queryClient.removeQueries({
         queryKey,
       });
@@ -73,23 +74,23 @@ export const action =
         return oldData;
       });
 
-      await addTagToNote(noteId, returnedTag?.id);
+      await addTag(noteId, returnedTag?.id);
       return { ok: true };
     }
 
     if (intent === 'select-tag') {
-      await addTagToNote(noteId, rest.tag_id);
+      await addTag(noteId, rest.tag_id);
 
       return { ok: true };
     }
 
     if (intent === 'unselect-tag') {
-      await deleteTagFromNote(noteId, rest.tag_id);
+      await removeTag(noteId, rest.tag_id);
       queryClient.setQueryData<INote>(queryKey, oldData => {
         if (oldData) {
           return {
             ...oldData,
-            tags: oldData.tags.filter(tag => tag.id !== rest.tag_id),
+            tags: oldData?.tags?.filter(tag => tag.id !== rest.tag_id),
           };
         }
       });
@@ -124,6 +125,4 @@ export function Note() {
       </Await>
     </Suspense>
   );
-
-  return;
 }

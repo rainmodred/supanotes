@@ -1,37 +1,61 @@
 import Markdown from 'react-markdown';
-import { Input } from './ui/input';
+import { Input } from '../../../components/ui/input';
 import { Pencil, Eye } from 'lucide-react';
-import { Button } from './ui/button';
-import { useFetcher } from 'react-router-dom';
+import { Button } from '../../../components/ui/button';
+import { useFetcher, useNavigation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-import { Textarea } from './ui/textarea';
-import { useAuth } from './auth-provider';
-import { MultipleSelector, Option } from './ui/multiple-selector';
+import { Textarea } from '../../../components/ui/textarea';
+import { useAuth } from '../../../components/auth-provider';
+import {
+  MultipleSelector,
+  Option,
+  useDebounce,
+} from '../../../components/ui/multiple-selector';
 import { INote } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 import { tagsQuery } from '@/features/tags/api/get-tags';
+import { useMounted } from '@/features/note/hooks/use-mounted';
 
-//TOOD: types
 interface Props {
-  note?: INote | undefined;
+  note?: INote;
 }
 
 export function Editor({ note }: Props) {
+  const fetcher = useFetcher();
+  const navigation = useNavigation();
+  console.log('navigation', navigation.state);
+  const { session } = useAuth();
+  const { data: allTags } = useQuery({ ...tagsQuery });
   const [value, setValue] = useState<Option[]>([]);
   const [title, setTitle] = useState(note?.title ?? '');
   const [body, setBody] = useState(note?.body ?? '');
-  const { data: allTags } = useQuery({ ...tagsQuery });
+  const debouncedBody = useDebounce(body, 500);
+  const [mode, setMode] = useState<'read' | 'edit'>('edit');
+  const formRef = useRef();
+  const mounted = useMounted();
+
+  const prevBody = useRef(note?.title);
 
   console.log('EDITOR', { allTags, note });
+  const { submit } = fetcher;
+  useEffect(() => {
+    //TODO: still called on note change
+    if (prevBody.current === debouncedBody) {
+      return;
+    }
+    prevBody.current = debouncedBody;
 
-  const formRef = useRef();
+    const formData = new FormData(formRef.current);
+    formData.append('intent', 'save');
+    submit(formData, { method: 'post' });
+  }, [debouncedBody, navigation.state, submit, mounted]);
 
   useEffect(() => {
     setTitle(note?.title ?? '');
     setBody(note?.body ?? '');
 
     setValue([
-      ...(note?.tags.map(({ id, name }) => ({
+      ...(note?.tags?.map(({ id, name }) => ({
         id,
         label: name,
         value: name,
@@ -39,34 +63,37 @@ export function Editor({ note }: Props) {
     ]);
   }, [note]);
 
-  const [mode, setMode] = useState<'read' | 'edit'>('edit');
-
-  const fetcher = useFetcher();
-  const { session } = useAuth();
-
   function changeMode() {
     setMode(mode === 'edit' ? 'read' : 'edit');
   }
 
-  // const options: Option[] = [
-  //   ...(note?.tags.map(({ id, name }) => ({
-  //     id,
-  //     label: name,
-  //     value: name,
-  //   })) ?? []),
-  // ];
-  // console.log('options:', options);
+  function handleTag(
+    intent: 'create-tag' | 'unselect-tag' | 'select-tag',
+    value: string,
+  ) {
+    const formData = new FormData(formRef.current);
+    if (intent === 'create-tag') {
+      formData.append('tagName', value);
+    }
+
+    if (intent === 'select-tag' || intent === 'unselect-tag') {
+      formData.append('tag_id', value);
+    }
+
+    formData.append('intent', intent);
+    fetcher.submit(formData, { method: 'post' });
+  }
 
   return (
     <div className="flex h-full flex-col">
       <div className="h-full ">
-        <fetcher.Form method="post" className="h-full" ref={formRef.current}>
+        <fetcher.Form method="post" className="h-full" ref={formRef}>
           <div className="flex flex-col">
             {session && (
               <input name="user_id" value={session?.user.id} type="hidden" />
             )}
             {note && <input name="note_id" value={note.id} type="hidden" />}
-            <div className="flex">
+            <div className="mb-1 flex gap-1">
               <Input
                 name="title"
                 placeholder="title"
@@ -113,36 +140,13 @@ export function Editor({ note }: Props) {
               }
               onChange={setValue}
               onCreate={async ({ value }) => {
-                //TOOD: remove formRef?
-                const formData = new FormData(formRef.current);
-                formData.append('tagName', value);
-                formData.append('intent', 'create-tag');
-                formData.append('user_id', session?.user.id);
-                formData.append('note_id', note?.id);
-                console.log('formData', Object.fromEntries(formData));
-                fetcher.submit(formData, { method: 'post' });
+                handleTag('create-tag', value);
               }}
-              onSelect={value => {
-                const formData = new FormData();
-                formData.append('tag_id', value.id);
-                formData.append('intent', 'select-tag');
-                formData.append('user_id', session?.user.id);
-                formData.append('note_id', note?.id);
-
-                fetcher.submit(formData, { method: 'post' });
-
-                console.log('onSelect', value);
+              onSelect={option => {
+                handleTag('select-tag', option.id);
               }}
-              onUnselect={value => {
-                const formData = new FormData();
-                formData.append('tag_id', value.id);
-                formData.append('intent', 'unselect-tag');
-                formData.append('user_id', session?.user.id);
-                formData.append('note_id', note?.id);
-
-                fetcher.submit(formData, { method: 'post' });
-
-                console.log('onUnselect', value);
+              onUnselect={option => {
+                handleTag('unselect-tag', option.id);
               }}
               placeholder="Tags..."
               creatable

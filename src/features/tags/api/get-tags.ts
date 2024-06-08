@@ -7,14 +7,12 @@ export const tagsQuery = {
 };
 
 async function fetchTags() {
-  try {
-    const { data } = await supabase
-      .from('tags')
-      .select(`id, name`)
-      .returns<ITag[]>();
-    console.log('fetchTags', data);
-    return data;
-  } catch (error) {
-    console.log('error', error);
+  const { data, error } = await supabase
+    .from('tags')
+    .select(`id, name`)
+    .returns<ITag[]>();
+  if (error) {
+    throw error;
   }
+  return data;
 }

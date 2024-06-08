@@ -14,11 +14,10 @@ export const noteQuery = (id: string, queryClient: QueryClient) => ({
 });
 
 async function fetchNote(noteId: string) {
-  try {
-    const { data } = await supabase
-      .from('notes')
-      .select(
-        `
+  const { data, error } = await supabase
+    .from('notes')
+    .select(
+      `
       id, 
       created_at, 
       updated_at, 
@@ -26,12 +25,11 @@ async function fetchNote(noteId: string) {
       body, 
       tags(id, name)
     `,
-      )
-      .eq('id', noteId)
-      .returns<INote[]>();
-    console.log('fetchNote', data);
-    return data?.at(0);
-  } catch (error) {
-    console.log('error', error);
+    )
+    .eq('id', noteId)
+    .returns<INote[]>();
+  if (error) {
+    throw error;
   }
+  return data?.at(0);
 }

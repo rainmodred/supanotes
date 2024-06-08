@@ -7,11 +7,10 @@ export const notesQuery = {
 };
 
 async function fetchNotes() {
-  try {
-    const { data } = await supabase
-      .from('notes')
-      .select(
-        `
+  const { data, error } = await supabase
+    .from('notes')
+    .select(
+      `
       id, 
       created_at, 
       updated_at, 
@@ -19,11 +18,10 @@ async function fetchNotes() {
       body, 
       tags(id, name)
     `,
-      )
-      .returns<Omit<INote, 'user_id'>[]>();
-    console.log('fetchNotes', data);
-    return data;
-  } catch (error) {
-    console.log('error', error);
+    )
+    .returns<Omit<INote, 'user_id'>[]>();
+  if (error) {
+    throw error;
   }
+  return data;
 }

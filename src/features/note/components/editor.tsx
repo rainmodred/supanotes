@@ -2,7 +2,7 @@ import Markdown from 'react-markdown';
 import { Input } from '../../../components/ui/input';
 import { Pencil, Eye } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
-import { useFetcher, useNavigation } from 'react-router-dom';
+import { useFetcher } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { Textarea } from '../../../components/ui/textarea';
 import { useAuth } from '../../../components/auth-provider';
@@ -14,16 +14,14 @@ import {
 import { INote } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 import { tagsQuery } from '@/features/tags/api/get-tags';
-import { useMounted } from '@/features/note/hooks/use-mounted';
 
 interface Props {
+  type: 'create' | 'edit';
   note?: INote;
 }
 
-export function Editor({ note }: Props) {
+export function Editor({ note, type }: Props) {
   const fetcher = useFetcher();
-  const navigation = useNavigation();
-  console.log('navigation', navigation.state);
   const { session } = useAuth();
   const { data: allTags } = useQuery({ ...tagsQuery });
   const [value, setValue] = useState<Option[]>([]);
@@ -32,15 +30,14 @@ export function Editor({ note }: Props) {
   const debouncedBody = useDebounce(body, 500);
   const [mode, setMode] = useState<'read' | 'edit'>('edit');
   const formRef = useRef();
-  const mounted = useMounted();
 
-  const prevBody = useRef(note?.title);
+  const prevBody = useRef(note?.body);
+  const [changed, setChanged] = useState(false);
 
-  console.log('EDITOR', { allTags, note });
+  // console.log('EDITOR', { allTags, note });
   const { submit } = fetcher;
   useEffect(() => {
-    //TODO: still called on note change
-    if (prevBody.current === debouncedBody) {
+    if (!changed || type === 'create' || prevBody.current === debouncedBody) {
       return;
     }
     prevBody.current = debouncedBody;
@@ -48,7 +45,7 @@ export function Editor({ note }: Props) {
     const formData = new FormData(formRef.current);
     formData.append('intent', 'save');
     submit(formData, { method: 'post' });
-  }, [debouncedBody, navigation.state, submit, mounted]);
+  }, [changed, submit, type, debouncedBody]);
 
   useEffect(() => {
     setTitle(note?.title ?? '');
@@ -161,7 +158,10 @@ export function Editor({ note }: Props) {
             <Textarea
               name="body"
               value={body}
-              onChange={e => setBody(e.target.value)}
+              onChange={e => {
+                setBody(e.target.value);
+                setChanged(true);
+              }}
               className="h-full w-full resize-none border-none p-4 focus-visible:border-none focus-visible:outline-none "
               autoComplete="off"
             ></Textarea>

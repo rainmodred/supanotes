@@ -120,7 +120,7 @@ export function Note() {
     >
       <Await resolve={initialData.note}>
         {note => {
-          return <Editor note={note} />;
+          return <Editor note={note} type="edit" />;
         }}
       </Await>
     </Suspense>

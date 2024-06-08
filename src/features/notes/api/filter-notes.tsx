@@ -7,6 +7,10 @@ export function filterNotes(notes: INote[], tagName: string, search: string) {
       ? [...notes]
       : notes?.filter(note => note.tags.some(tag => tag.name === tagName));
 
+  if (search === '') {
+    return filteredByTag;
+  }
+
   return filteredByTag.filter(
     note =>
       note.body.toLowerCase().includes(search) ||

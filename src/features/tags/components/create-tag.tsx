@@ -15,7 +15,6 @@ export function CreateTag() {
   const [formError, setFormError] = useState('');
 
   const { data: tags } = useQuery({ ...tagsQuery });
-  console.log('createtag', tags);
 
   const { session } = useAuth();
 

@@ -2,7 +2,7 @@ import Markdown from 'react-markdown';
 import { Input } from '../../../components/ui/input';
 import { Pencil, Eye } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher, useNavigation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { Textarea } from '../../../components/ui/textarea';
 import { useAuth } from '../../../components/auth-provider';
@@ -20,45 +20,56 @@ interface Props {
   note?: INote;
 }
 
-export function Editor({ note, type }: Props) {
+export function Editor({ note, type: intent }: Props) {
   const fetcher = useFetcher();
   const { session } = useAuth();
   const { data: allTags } = useQuery({ ...tagsQuery });
-  const [value, setValue] = useState<Option[]>([]);
+  //set note tags to MultipleSelector
+  const [value, setValue] = useState<Option[]>([
+    ...(note?.tags?.map(({ id, name }) => ({
+      id,
+      label: name,
+      value: name,
+    })) ?? []),
+  ]);
+
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [title, setTitle] = useState(note?.title ?? '');
+  const debouncedTitle = useDebounce(title, 500);
+  const isTitleChanged = useRef(false);
+
   const [body, setBody] = useState(note?.body ?? '');
   const debouncedBody = useDebounce(body, 500);
+  const isBodyChanged = useRef(false);
+
   const [mode, setMode] = useState<'read' | 'edit'>('edit');
-  const formRef = useRef();
 
-  const prevBody = useRef(note?.body);
-  const [changed, setChanged] = useState(false);
-
-  // console.log('EDITOR', { allTags, note });
   const { submit } = fetcher;
   useEffect(() => {
-    if (!changed || type === 'create' || prevBody.current === debouncedBody) {
+    if (!formRef.current) {
       return;
     }
-    prevBody.current = debouncedBody;
+
+    if (!isTitleChanged.current && !isBodyChanged.current) {
+      return;
+    }
 
     const formData = new FormData(formRef.current);
-    formData.append('intent', 'save');
+    if (!formData.get('title')) {
+      //Show error?
+      return;
+    }
+    formData.append('intent', intent);
+    console.log(Object.fromEntries(formData), { intent });
     submit(formData, { method: 'post' });
-  }, [changed, submit, type, debouncedBody]);
-
-  useEffect(() => {
-    setTitle(note?.title ?? '');
-    setBody(note?.body ?? '');
-
-    setValue([
-      ...(note?.tags?.map(({ id, name }) => ({
-        id,
-        label: name,
-        value: name,
-      })) ?? []),
-    ]);
-  }, [note]);
+  }, [
+    debouncedTitle,
+    debouncedBody,
+    isTitleChanged,
+    isBodyChanged,
+    submit,
+    intent,
+  ]);
 
   function changeMode() {
     setMode(mode === 'edit' ? 'read' : 'edit');
@@ -66,15 +77,19 @@ export function Editor({ note, type }: Props) {
 
   function handleTag(
     intent: 'create-tag' | 'unselect-tag' | 'select-tag',
-    value: string,
+    { id, value }: { id: string; value: string },
   ) {
+    if (!formRef.current) {
+      return;
+    }
     const formData = new FormData(formRef.current);
     if (intent === 'create-tag') {
       formData.append('tagName', value);
     }
 
     if (intent === 'select-tag' || intent === 'unselect-tag') {
-      formData.append('tag_id', value);
+      formData.append('tag_id', id);
+      formData.append('tagName', value);
     }
 
     formData.append('intent', intent);
@@ -95,7 +110,10 @@ export function Editor({ note, type }: Props) {
                 name="title"
                 placeholder="title"
                 value={title}
-                onChange={e => setTitle(e.target.value)}
+                onChange={e => {
+                  setTitle(e.target.value);
+                  isTitleChanged.current = true;
+                }}
               />
               <Button
                 type="button"
@@ -137,13 +155,14 @@ export function Editor({ note, type }: Props) {
               }
               onChange={setValue}
               onCreate={async ({ value }) => {
-                handleTag('create-tag', value);
+                handleTag('create-tag', { value });
               }}
+              //TODO: fix types
               onSelect={option => {
-                handleTag('select-tag', option.id);
+                handleTag('select-tag', { id: option.id, value: option.value });
               }}
               onUnselect={option => {
-                handleTag('unselect-tag', option.id);
+                handleTag('unselect-tag', { id: option.id });
               }}
               placeholder="Tags..."
               creatable
@@ -160,7 +179,7 @@ export function Editor({ note, type }: Props) {
               value={body}
               onChange={e => {
                 setBody(e.target.value);
-                setChanged(true);
+                isBodyChanged.current = true;
               }}
               className="h-full w-full resize-none border-none p-4 focus-visible:border-none focus-visible:outline-none "
               autoComplete="off"

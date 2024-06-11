@@ -31,14 +31,16 @@ export const action =
 
     const noteId = rest.note_id.toString();
     const { queryKey } = noteQuery(noteId, queryClient);
-    if (intent === 'save') {
-      const updatedNote = await updateNote(rest);
+    if (intent === 'edit') {
+      const returnedNote = await updateNote(rest);
       await queryClient.setQueryData(queryKey, oldData => {
-        return {
-          ...oldData,
-          body: updatedNote.body,
-          updated_at: updatedNote.updated_at,
-        };
+        if (oldData) {
+          return {
+            ...oldData,
+            body: returnedNote.body,
+            updated_at: returnedNote.updated_at,
+          };
+        }
       });
       return { ok: true };
     }
@@ -79,7 +81,20 @@ export const action =
     }
 
     if (intent === 'select-tag') {
+      console.log('select-tag', rest);
+      //TODO: handle error
       await addTag(noteId, rest.tag_id);
+
+      queryClient.setQueryData<INote>(queryKey, oldData => {
+        console.log(oldData);
+        if (!oldData) {
+          return;
+        }
+        return {
+          ...oldData,
+          tags: [...oldData.tags, { id: rest.tag_id, name: rest.tagName }],
+        };
+      });
 
       return { ok: true };
     }
@@ -120,7 +135,7 @@ export function Note() {
     >
       <Await resolve={initialData.note}>
         {note => {
-          return <Editor note={note} type="edit" />;
+          return <Editor note={note} type="edit" key={note.id} />;
         }}
       </Await>
     </Suspense>

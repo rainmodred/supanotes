@@ -51,7 +51,7 @@ export const action =
       });
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData =>
-        oldData?.filter(note => note.id !== rest.id),
+        oldData?.filter(note => note.id !== noteId),
       );
 
       return redirect(`/notes`);

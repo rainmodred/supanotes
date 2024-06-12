@@ -1,6 +1,6 @@
 import Markdown from 'react-markdown';
 import { Input } from '../../../components/ui/input';
-import { Pencil, Eye } from 'lucide-react';
+import { Pencil, Eye, Trash2 } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { useFetcher } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
@@ -129,8 +129,13 @@ export function Editor({ note, type: intent }: Props) {
                 Save
               </Button>
 
-              <Button variant="outline" name="intent" value="delete">
-                Delete
+              <Button
+                variant="outline"
+                size="icon"
+                name="intent"
+                value="delete"
+              >
+                <Trash2 />
               </Button>
             </div>
             <MultipleSelector

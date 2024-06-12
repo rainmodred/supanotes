@@ -2,7 +2,7 @@ import Markdown from 'react-markdown';
 import { Input } from '../../../components/ui/input';
 import { Pencil, Eye } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
-import { useFetcher, useNavigation } from 'react-router-dom';
+import { useFetcher } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { Textarea } from '../../../components/ui/textarea';
 import { useAuth } from '../../../components/auth-provider';
@@ -60,7 +60,7 @@ export function Editor({ note, type: intent }: Props) {
       return;
     }
     formData.append('intent', intent);
-    console.log(Object.fromEntries(formData), { intent });
+    // console.log(Object.fromEntries(formData), { intent });
     submit(formData, { method: 'post' });
   }, [
     debouncedTitle,

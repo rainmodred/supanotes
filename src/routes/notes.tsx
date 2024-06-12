@@ -1,23 +1,27 @@
-import { useAuth } from '@/components/auth-provider';
-import { ModeToggle } from '@/components/mode-toggle';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable';
-import { createTag, fetchNotes, fetchTags } from '@/lib/supabase';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { notesQuery } from '@/features/notes/api/get-notes';
+import { NotesList } from '@/features/notes/components/notes-list';
+import { createTag } from '@/features/tags/api/create-tag';
+import { tagsQuery } from '@/features/tags/api/get-tags';
+import { CreateTag } from '@/features/tags/components/create-tag';
+import { TagsList } from '@/features/tags/components/tags-list';
+import { ITag } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { QueryClient, useQueries } from '@tanstack/react-query';
-import { Folder, Hash, LogOut, Notebook, Plus, Trash } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { QueryClient } from '@tanstack/react-query';
+import { Notebook, Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import {
   ActionFunctionArgs,
   Link,
   Outlet,
-  useFetcher,
+  defer,
   useLoaderData,
 } from 'react-router-dom';
 
@@ -25,234 +29,134 @@ export const action =
   (queryClient: QueryClient) =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
-    const newTag = formData.get('addedTag');
-    const userId = formData.get('user_id');
+    const newTag = formData.get('addedTag')?.toString().trim();
+    const userId = formData.get('user_id')?.toString();
 
     if (newTag && userId) {
-      newTag.toString().trim();
-      await createTag(newTag.toString().trim(), userId.toString());
+      const returnedTag = await createTag(newTag, userId);
+      queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
+        return [...oldData, returnedTag];
+      });
     }
+
     return null;
   };
 
-export const tagsQuery = {
-  queryKey: ['tags'],
-  queryFn: () => fetchTags(),
-};
-
-export const notesQuery = {
-  queryKey: ['notes'],
-  queryFn: () => fetchNotes(),
-};
-
 export const loader = (queryClient: QueryClient) => async () => {
-  const tags = await queryClient.fetchQuery({ ...tagsQuery });
-  const notes = await queryClient.fetchQuery({ ...notesQuery });
-  return { notes, tags };
+  return defer({
+    notes: queryClient.fetchQuery({ ...notesQuery }),
+    tags: queryClient.fetchQuery({ ...tagsQuery }),
+  });
 };
 
 export function Notes() {
   const initialData = useLoaderData() as Awaited<
     ReturnType<ReturnType<typeof loader>>
   >;
-  const [notesResult, tagsResult] = useQueries({
-    queries: [
-      { ...notesQuery, initialData: initialData.notes },
-      { ...tagsQuery, initialData: initialData.tags },
-    ],
-  });
-  const { data: notes } = notesResult;
-  const { data: tags } = tagsResult;
-
-  const [selectedTag, setSelectedTag] = useState('all');
+  const [selectedTagName, setSelectedTagName] = useState('all');
 
   function handleTagSelect(tagId: string) {
-    setSelectedTag(tagId);
+    setSelectedTagName(tagId);
   }
 
+  //TODO: mobile layout
   const ref = useRef<ImperativePanelHandle>(null);
   const editorPanel = useRef<ImperativePanelHandle>(null);
 
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 720px)');
-    if (mql.matches) {
-      const panel = editorPanel.current;
-      panel?.collapse();
-    }
-  }, []);
+  // useEffect(() => {
+  //   const mql = window.matchMedia('(max-width: 720px)');
+  //   if (mql.matches) {
+  //     const panel = editorPanel.current;
+  //     panel?.collapse();
+  //   }
+  // }, []);
 
-  const collapsePanel = () => {
-    const panel = ref.current;
-    if (!panel) {
-      return;
-    }
-    if (panel.isCollapsed()) {
-      panel.expand();
-    } else if (panel.isExpanded()) {
-      panel.collapse();
-    }
-  };
+  // const collapsePanel = () => {
+  //   const panel = ref.current;
+  //   if (!panel) {
+  //     return;
+  //   }
+  //   if (panel.isCollapsed()) {
+  //     panel.expand();
+  //   } else if (panel.isExpanded()) {
+  //     panel.collapse();
+  //   }
+  // };
+
+  {
+    /* <div className="flex flex-col items-center justify-start p-2">
+  <Button onClick={collapsePanel} size="icon">
+    <Folder />
+  </Button>
+  <Button size="icon">
+    <LogOut />
+  </Button>
+
+  <ModeToggle />
+</div> */
+  }
 
   return (
-    <div className="flex">
-      <div className="flex flex-col items-center justify-start p-2">
-        <Button onClick={collapsePanel} size="icon">
-          <Folder />
-        </Button>
-        <Button size="icon">
-          <LogOut />
-        </Button>
-
-        <ModeToggle />
-      </div>
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="min-h-screen  rounded-lg border"
-      >
-        <ResizablePanel defaultSize={15} collapsible ref={ref}>
-          <div className="py-4">
-            <div className="flex flex-col items-start">
-              {/*TODO: active */}
-              <Button
-                variant="outline"
-                className="flex w-full justify-start gap-2 border-none bg-slate-200"
-                onClick={() => handleTagSelect('all')}
-              >
-                <Notebook />
-                All Notes
-              </Button>
-              <Button
+    <ResizablePanelGroup
+      direction="horizontal"
+      className="min-h-screen rounded-lg border"
+    >
+      <ResizablePanel defaultSize={15} collapsible ref={ref}>
+        <div className="h-full py-4">
+          <div className="flex h-full flex-col items-start">
+            <Button
+              variant="outline"
+              className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
+              onClick={() => handleTagSelect('all')}
+            >
+              <Notebook size="16px" />
+              All Notes
+            </Button>
+            {/* <Button
                 variant="outline"
                 className="flex w-full justify-start gap-2 border-none"
                 onClick={() => handleTagSelect('all')}
               >
                 <Trash />
                 Trash
-              </Button>
+              </Button> */}
 
-              <TagForm />
-              {tags &&
-                tags.map(tag => {
-                  return (
-                    <Button
-                      key={tag.id}
-                      variant="outline"
-                      className="flex w-full justify-start gap-2 border-none"
-                      onClick={() => handleTagSelect('all')}
-                    >
-                      <Hash />
-                      {tag.name}
-                    </Button>
-                  );
-                })}
-            </div>
+            <CreateTag />
+            <ScrollArea className="h-full w-full">
+              <TagsList
+                selectedTagName={selectedTagName}
+                onTagSelect={handleTagSelect}
+                tags={initialData.tags}
+              />
+            </ScrollArea>
           </div>
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={20} collapsible ref={ref}>
-          <div className="py-4">
-            <div className="flex items-center justify-between px-4">
-              <p>Notes</p>
-              <Link
-                to="new"
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'icon' }),
-                )}
-              >
-                <Plus />
-              </Link>
-            </div>
-
-            <Input className="mb-6" placeholder="Search note or #tag" />
-            {notes &&
-              notes.map(note => {
-                return (
-                  <Link
-                    key={note.id}
-                    to={note.id.toString()}
-                    className={cn(
-                      buttonVariants({ variant: 'outline' }),
-                      'flex w-full justify-start gap-2 border-none',
-                    )}
-                  >
-                    {note.title}
-                  </Link>
-                );
-              })}
+        </div>
+      </ResizablePanel>
+      <ResizableHandle />
+      <ResizablePanel defaultSize={20} collapsible ref={ref}>
+        <div className="h-full py-4 pb-32">
+          <div className="flex items-center justify-between px-4 py-2">
+            <p>Notes</p>
+            <Link
+              to="new"
+              className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+            >
+              <Plus size="16px" />
+            </Link>
           </div>
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel defaultSize={65} collapsible ref={editorPanel}>
-          <div className="h-full p-4">
-            <Outlet />
-          </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
-    </div>
-  );
-}
 
-function TagForm() {
-  const fetcher = useFetcher();
-  const [addingTag, setAddingTag] = useState(false);
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const tagInputRef = useRef<HTMLInputElement | null>(null);
-
-  const { session } = useAuth();
-
-  function handleResetTag() {
-    if (!formRef.current) {
-      return;
-    }
-
-    const formData = new FormData(formRef.current);
-    const newTag = formData.get('addedTag');
-    //TODO: show error if tag already exists
-    if (newTag) {
-      fetcher.submit(formData, { method: 'post' });
-    }
-
-    formRef.current?.reset();
-    setAddingTag(false);
-  }
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!formRef.current) {
-      return;
-    }
-    handleResetTag();
-  }
-
-  return (
-    <>
-      <div className="flex w-full justify-between p-4">
-        <span>Tags:</span>
-        <Button
-          onClick={() => {
-            setAddingTag(true);
-            tagInputRef?.current?.focus();
-          }}
-          size="icon"
-          variant="outline"
-        >
-          <Plus />
-        </Button>
-      </div>
-
-      <fetcher.Form
-        method="post"
-        className={cn(
-          'flex w-full items-center gap-2 px-4 py-2',
-          !addingTag && 'opacity-0',
-        )}
-        ref={formRef}
-        onSubmit={e => handleSubmit(e)}
-      >
-        <Hash />
-        <input name="user_id" defaultValue={session?.user.id} type="hidden" />
-        <Input name="addedTag" ref={tagInputRef} onBlur={handleResetTag} />
-      </fetcher.Form>
-    </>
+          <NotesList
+            selectedTagName={selectedTagName}
+            notes={initialData.notes}
+          />
+        </div>
+      </ResizablePanel>
+      <ResizableHandle />
+      <ResizablePanel defaultSize={65} collapsible ref={editorPanel}>
+        <div className="h-full p-4">
+          <Outlet />
+        </div>
+      </ResizablePanel>
+    </ResizablePanelGroup>
   );
 }

@@ -1,23 +1,25 @@
-import { Editor } from '@/components/editor';
-import {
-  addTagToNote,
-  createTag,
-  deleteNote,
-  deleteTagFromNote,
-  fetchNote,
-  updateNote,
-} from '@/lib/supabase';
-import { QueryClient, useQuery } from '@tanstack/react-query';
+import { Editor } from '@/features/note/components/editor';
+import { QueryClient } from '@tanstack/react-query';
 import {
   ActionFunctionArgs,
+  Await,
   LoaderFunctionArgs,
+  defer,
   json,
   redirect,
   useLoaderData,
-  useParams,
 } from 'react-router-dom';
-import { notesQuery, tagsQuery } from './notes';
 import { INote, ITag } from '@/lib/types';
+import { notesQuery } from '@/features/notes/api/get-notes';
+import { noteQuery } from '@/features/note/api/get-note';
+import { Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { createTag } from '@/features/tags/api/create-tag';
+import { tagsQuery } from '@/features/tags/api/get-tags';
+import { updateNote } from '@/features/note/api/update-note';
+import { deleteNote } from '@/features/note/api/delete-note';
+import { removeTag } from '@/features/note/api/remove-tag';
+import { addTag } from '@/features/note/api/add-tag';
 
 export const action =
   (queryClient: QueryClient) =>
@@ -28,22 +30,28 @@ export const action =
     console.log('note action', updates, intent);
 
     const noteId = rest.note_id.toString();
-    if (intent === 'save') {
-      const updatedNote = await updateNote(rest);
-      await queryClient.setQueryData(noteQuery(noteId).queryKey, updatedNote);
+    const { queryKey } = noteQuery(noteId, queryClient);
+    if (intent === 'edit') {
+      const returnedNote = await updateNote(rest);
+      await queryClient.setQueryData(queryKey, oldData => {
+        if (oldData) {
+          return {
+            ...oldData,
+            body: returnedNote.body,
+            updated_at: returnedNote.updated_at,
+          };
+        }
+      });
       return { ok: true };
     }
     if (intent === 'delete') {
-      const { error } = await deleteNote(noteId);
-      if (error) {
-        throw json({ message: 'Delete error' }, { status: 404 });
-      }
+      await deleteNote(noteId);
       queryClient.removeQueries({
-        queryKey: noteQuery(noteId).queryKey,
+        queryKey,
       });
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData =>
-        oldData?.filter(note => note.id !== rest.id),
+        oldData?.filter(note => note.id !== noteId),
       );
 
       return redirect(`/notes`);
@@ -61,30 +69,43 @@ export const action =
         }
         return [returnedTag];
       });
-      queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
+      queryClient.setQueryData<INote>(queryKey, oldData => {
         if (oldData) {
           return { ...oldData, tags: [...oldData.tags, returnedTag] };
         }
         return oldData;
       });
 
-      await addTagToNote(noteId, returnedTag?.id);
+      await addTag(noteId, returnedTag?.id);
       return { ok: true };
     }
 
     if (intent === 'select-tag') {
-      await addTagToNote(noteId, rest.tag_id);
+      console.log('select-tag', rest);
+      //TODO: handle error
+      await addTag(noteId, rest.tag_id);
+
+      queryClient.setQueryData<INote>(queryKey, oldData => {
+        console.log(oldData);
+        if (!oldData) {
+          return;
+        }
+        return {
+          ...oldData,
+          tags: [...oldData.tags, { id: rest.tag_id, name: rest.tagName }],
+        };
+      });
 
       return { ok: true };
     }
 
     if (intent === 'unselect-tag') {
-      await deleteTagFromNote(noteId, rest.tag_id);
-      queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
+      await removeTag(noteId, rest.tag_id);
+      queryClient.setQueryData<INote>(queryKey, oldData => {
         if (oldData) {
           return {
             ...oldData,
-            tags: oldData.tags.filter(tag => tag.id !== rest.tag_id),
+            tags: oldData?.tags?.filter(tag => tag.id !== rest.tag_id),
           };
         }
       });
@@ -94,31 +115,29 @@ export const action =
     throw json({ message: 'Invalid intent' }, { status: 400 });
   };
 
-export const noteQuery = (noteId: string) => ({
-  queryKey: ['notes', noteId],
-  queryFn: async () => fetchNote(noteId),
-});
-
 export const loader =
   (queryClient: QueryClient) =>
   async ({ params }: LoaderFunctionArgs) => {
-    const query = noteQuery(params.noteId!);
-    const data = await queryClient.fetchQuery({ ...query });
-    console.log('note loader', data);
-
-    if (!data) throw new Response('', { status: 404 });
-    return data;
+    const query = noteQuery(params.noteId!, queryClient);
+    return defer({ note: queryClient.fetchQuery({ ...query }) });
   };
 
 export function Note() {
   const initialData = useLoaderData() as Awaited<
     ReturnType<ReturnType<typeof loader>>
   >;
-  const params = useParams();
-  const { data: note } = useQuery({
-    ...noteQuery(params.noteId!),
-    initialData,
-  });
 
-  return <Editor note={note} />;
+  return (
+    <Suspense
+      fallback={Array.from({ length: 5 }).map((_, i) => {
+        return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
+      })}
+    >
+      <Await resolve={initialData.note}>
+        {note => {
+          return <Editor note={note} type="edit" key={note.id} />;
+        }}
+      </Await>
+    </Suspense>
+  );
 }

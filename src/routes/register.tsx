@@ -10,7 +10,7 @@ import {
 } from 'react-router-dom';
 import { LoginActionData, LoginSchema } from './login';
 import { useAuth } from '@/components/auth-provider';
-import { signUpNewUser } from '@/lib/supabase';
+import { signUpNewUser } from '@/lib/auth';
 import { PasswordInput } from '@/components/ui/password-input';
 
 export async function action({ request }: ActionFunctionArgs) {

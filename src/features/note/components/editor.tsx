@@ -1,6 +1,6 @@
 import Markdown from 'react-markdown';
 import { Input } from '../../../components/ui/input';
-import { Pencil, Eye, Trash2 } from 'lucide-react';
+import { Pencil, Eye, Trash2, RefreshCw } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { useFetcher } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
@@ -14,6 +14,7 @@ import {
 import { INote } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 import { tagsQuery } from '@/features/tags/api/get-tags';
+import { cn } from '@/lib/utils';
 
 interface Props {
   type: 'create' | 'edit';
@@ -125,9 +126,13 @@ export function Editor({ note, type: intent }: Props) {
                 {mode === 'read' && <Eye />}
               </Button>
 
-              <Button variant="outline" name="intent" value="save">
-                Save
-              </Button>
+              <div className="flex h-10 w-10 items-center justify-center border border-input bg-background">
+                <RefreshCw
+                  className={cn({
+                    'animate-spin': fetcher.state === 'submitting',
+                  })}
+                />
+              </div>
 
               <Button
                 variant="outline"

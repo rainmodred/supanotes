@@ -5,7 +5,7 @@ import { Button } from '../../../components/ui/button';
 import { useFetcher } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { Textarea } from '../../../components/ui/textarea';
-import { useAuth } from '../../../components/auth-provider';
+import { useAuth } from '@/lib/auth';
 import {
   MultipleSelector,
   Option,

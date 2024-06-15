@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from './auth-provider';
+import { useAuth } from '@/lib/auth';
 
 export function PublicRoute({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();

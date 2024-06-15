@@ -1,4 +1,4 @@
-import { useAuth } from '@/components/auth-provider';
+import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';

@@ -10,8 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { z } from 'zod';
-import { useAuth } from '@/components/auth-provider';
-import { signInWithEmail } from '@/lib/auth';
+import { signInWithEmail, useAuth } from '@/lib/auth';
 import { Session, User } from '@supabase/supabase-js';
 import { PasswordInput } from '@/components/ui/password-input';
 

@@ -9,8 +9,7 @@ import {
   useActionData,
 } from 'react-router-dom';
 import { LoginActionData, LoginSchema } from './login';
-import { useAuth } from '@/components/auth-provider';
-import { signUpNewUser } from '@/lib/auth';
+import { signUpNewUser, useAuth } from '@/lib/auth';
 import { PasswordInput } from '@/components/ui/password-input';
 
 export async function action({ request }: ActionFunctionArgs) {

@@ -4,7 +4,7 @@ import {
   useRouteError,
 } from 'react-router-dom';
 import { Root } from './routes/root';
-import { AuthProvider } from './components/auth-provider';
+import { AuthProvider } from './lib/auth';
 import { Login, action as loginAction } from './routes/login';
 import { Register, action as registerAction } from './routes/register';
 import { PublicRoute } from './components/public-route';

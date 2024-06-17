@@ -3,6 +3,8 @@ import { Hash } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Suspense } from 'react';
 import { Await, useFetchers } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { RenameTag } from './rename-tag';
 
 interface Props {
   selectedTagName: string;
@@ -20,7 +22,8 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
     .map(({ formData }) => {
       return {
         id: '1',
-        name: formData?.get('addedTag'),
+        name: formData?.get('name'),
+        intent: formData?.get('intent'),
       };
     });
 
@@ -36,17 +39,33 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
     >
       <Await resolve={tags}>
         {tags => {
-          return [...tags, ...tagFetchers].map(tag => {
+          return [
+            ...tags,
+            ...tagFetchers.filter(fetcher => fetcher.intent !== 'rename-tag'),
+            // Don't show new tag on rename intent
+          ].map(tag => {
             return (
-              <Button
+              <div
                 key={tag.id}
-                variant="outline"
-                className={`flex w-full justify-start gap-2 border-none ${selectedTagName === tag.name ? 'bg-slate-200' : ''}`}
-                onClick={() => onTagSelect(tag.name)}
+                className={cn(`grid w-full grid-cols-3 px-2 pr-1`, {
+                  'bg-slate-200': selectedTagName === tag.name,
+                })}
               >
-                <Hash size="16px" />
-                {tag.name}
-              </Button>
+                <Button
+                  variant="outline"
+                  className={`col-span-2 flex w-full justify-start gap-2 border-none bg-inherit px-0
+                    py-0`}
+                  onClick={() => onTagSelect(tag.name)}
+                >
+                  <Hash size="16px" className="shrink-0" />
+                  <span className="overflow-hidden text-ellipsis">
+                    {tag.name}
+                  </span>
+                </Button>
+                <div className="place-self-end">
+                  <RenameTag tag={tag} />
+                </div>
+              </div>
             );
           });
         }}

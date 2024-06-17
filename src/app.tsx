@@ -48,6 +48,7 @@ const router = createBrowserRouter([
     ),
     loader: notesLoader(queryClient),
     action: notesAction(queryClient),
+    // shouldRevalidate: () => false,
     children: [
       {
         path: 'new',

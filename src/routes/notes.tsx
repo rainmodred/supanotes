@@ -9,6 +9,7 @@ import { notesQuery } from '@/features/notes/api/get-notes';
 import { NotesList } from '@/features/notes/components/notes-list';
 import { createTag } from '@/features/tags/api/create-tag';
 import { tagsQuery } from '@/features/tags/api/get-tags';
+import { updateTag } from '@/features/tags/api/update-tag';
 import { CreateTag } from '@/features/tags/components/create-tag';
 import { TagsList } from '@/features/tags/components/tags-list';
 import { ITag } from '@/lib/types';
@@ -29,20 +30,47 @@ export const action =
   (queryClient: QueryClient) =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
-    const newTag = formData.get('addedTag')?.toString().trim();
-    const userId = formData.get('user_id')?.toString();
+    const updates = Object.fromEntries(formData);
+    const { intent, ...rest } = updates;
+    console.log('note action', intent, rest);
 
-    if (newTag && userId) {
-      const returnedTag = await createTag(newTag, userId);
+    if (intent === 'rename-tag') {
+      //TODO: handle error
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
-        return [...oldData, returnedTag];
+        if (oldData) {
+          return oldData.map(tag =>
+            tag.id === rest.id ? { ...tag, name: rest.name } : tag,
+          );
+        }
+        return oldData;
       });
+      await updateTag(rest);
+
+      return { ok: true };
+    }
+
+    if (intent === 'create-tag') {
+      // queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
+      //   if (oldData) {
+      //     return [...oldData, { name: rest.name, id: rest.name }];
+      //   }
+      // });
+
+      //TODO: Optimistic?
+      const returnedTag = await createTag(rest.name, rest.user_id);
+      queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
+        if (oldData) {
+          return [...oldData, returnedTag];
+        }
+      });
+      return { ok: true };
     }
 
     return null;
   };
 
 export const loader = (queryClient: QueryClient) => async () => {
+  console.log('note loader');
   return defer({
     notes: queryClient.fetchQuery({ ...notesQuery }),
     tags: queryClient.fetchQuery({ ...tagsQuery }),
@@ -101,7 +129,7 @@ export function Notes() {
       direction="horizontal"
       className="min-h-screen rounded-lg border"
     >
-      <ResizablePanel defaultSize={15} collapsible ref={ref}>
+      <ResizablePanel defaultSize={20} collapsible ref={ref}>
         <div className="h-full py-4">
           <div className="flex h-full flex-col items-start">
             <Button
@@ -122,7 +150,7 @@ export function Notes() {
               </Button> */}
 
             <CreateTag />
-            <ScrollArea className="h-full w-full">
+            <ScrollArea className="h-full w-full ">
               <TagsList
                 selectedTagName={selectedTagName}
                 onTagSelect={handleTagSelect}
@@ -152,7 +180,7 @@ export function Notes() {
         </div>
       </ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel defaultSize={65} collapsible ref={editorPanel}>
+      <ResizablePanel defaultSize={60} collapsible ref={editorPanel}>
         <div className="h-full p-4">
           <Outlet />
         </div>

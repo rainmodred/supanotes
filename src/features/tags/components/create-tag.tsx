@@ -33,7 +33,8 @@ export function CreateTag() {
     }
 
     const formData = new FormData(formRef.current);
-    const newTag = formData.get('addedTag');
+    const newTag = formData.get('name');
+    formData.append('intent', 'create-tag');
 
     if (newTag) {
       if (tags?.some(tag => tag.name === newTag)) {
@@ -72,7 +73,7 @@ export function CreateTag() {
           <div className="w-full">
             <Input
               placeholder="Add tag"
-              name="addedTag"
+              name="name"
               ref={tagInputRef}
               onBlur={handleResetTag}
             />

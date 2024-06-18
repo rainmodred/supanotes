@@ -17,7 +17,13 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
   const fetchers = useFetchers();
   const tagFetchers = fetchers
     .filter(fetcher => {
-      return fetcher.formAction?.startsWith('/notes');
+      const intent = fetcher.formData?.get('intent');
+
+      return (
+        (fetcher.formAction?.startsWith('/notes') && intent === 'create-tag') ||
+        intent === 'delete-tag' ||
+        intent === 'rename-tag'
+      );
     })
     .map(({ formData }) => {
       return {
@@ -27,7 +33,6 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
       };
     });
 
-  //TODO: optimisic delete
   return (
     <Suspense
       fallback={

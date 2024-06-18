@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { NotesList } from '@/features/notes/components/notes-list';
 import { createTag } from '@/features/tags/api/create-tag';
+import { deleteTag } from '@/features/tags/api/delete-tag';
 import { tagsQuery } from '@/features/tags/api/get-tags';
 import { updateTag } from '@/features/tags/api/update-tag';
 import { CreateTag } from '@/features/tags/components/create-tag';
@@ -63,6 +64,18 @@ export const action =
           return [...oldData, returnedTag];
         }
       });
+      return { ok: true };
+    }
+
+    if (intent === 'delete-tag') {
+      queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
+        if (oldData) {
+          return oldData.filter(tag => tag.id !== rest.id);
+        }
+      });
+
+      await deleteTag(rest.id);
+
       return { ok: true };
     }
 

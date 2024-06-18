@@ -16,8 +16,9 @@ import { useFetcher } from 'react-router-dom';
 
 interface Props {
   tag: ITag;
+  hidden: boolean;
 }
-export function RenameTag({ tag }: Props) {
+export function EditTag({ tag, hidden }: Props) {
   const fetcher = useFetcher();
 
   const [value, setValue] = useState(tag.name);
@@ -48,6 +49,21 @@ export function RenameTag({ tag }: Props) {
     submit(formData, { method: 'post' });
   }, [debouncedTagName, open, submit]);
 
+  function handleDelete() {
+    if (!formRef.current) {
+      return;
+    }
+    const formData = new FormData(formRef.current);
+    formData.append('intent', 'delete-tag');
+
+    setOpen(false);
+    submit(formData, { method: 'delete' });
+  }
+
+  if (hidden) {
+    return null;
+  }
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
@@ -58,7 +74,7 @@ export function RenameTag({ tag }: Props) {
       <DropdownMenuContent>
         <DropdownMenuLabel>Name</DropdownMenuLabel>
 
-        <fetcher.Form ref={formRef}>
+        <fetcher.Form ref={formRef} method="delete">
           <input name="user_id" defaultValue={session?.user.id} type="hidden" />
           <input name="id" defaultValue={tag.id} type="hidden" />
           <Input
@@ -71,7 +87,12 @@ export function RenameTag({ tag }: Props) {
             }}
           />
           <Separator className="mb-2" />
-          <Button variant="outline" className="flex w-full justify-start">
+          <Button
+            variant="outline"
+            className="flex w-full justify-start"
+            type="button"
+            onClick={handleDelete}
+          >
             <Trash2 size="16" /> Delete
           </Button>
         </fetcher.Form>

@@ -4,7 +4,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Suspense } from 'react';
 import { Await, useFetchers } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { RenameTag } from './rename-tag';
+import { EditTag } from './edit-tag';
 
 interface Props {
   selectedTagName: string;
@@ -21,12 +21,13 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
     })
     .map(({ formData }) => {
       return {
-        id: '1',
+        id: formData?.get('id') || '1',
         name: formData?.get('name'),
         intent: formData?.get('intent'),
       };
     });
 
+  //TODO: optimisic delete
   return (
     <Suspense
       fallback={
@@ -41,14 +42,23 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
         {tags => {
           return [
             ...tags,
-            ...tagFetchers.filter(fetcher => fetcher.intent !== 'rename-tag'),
-            // Don't show new tag on rename intent
+            // Optimistic create tag
+            ...tagFetchers.filter(
+              fetcher =>
+                fetcher.intent !== 'rename-tag' &&
+                fetcher.intent !== 'delete-tag',
+            ),
           ].map(tag => {
+            const isDeleting = tagFetchers.some(
+              fetcher =>
+                fetcher.intent === 'delete-tag' && fetcher.id === tag.id,
+            );
             return (
               <div
                 key={tag.id}
                 className={cn(`grid w-full grid-cols-3 px-2 pr-1`, {
                   'bg-slate-200': selectedTagName === tag.name,
+                  'opacity-30': isDeleting,
                 })}
               >
                 <Button
@@ -63,7 +73,9 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                   </span>
                 </Button>
                 <div className="place-self-end">
-                  <RenameTag tag={tag} />
+                  {/* Not working, action works but loader is not called */}
+                  {/* {!isDeleting && <EditTag tag={tag} />} */}
+                  <EditTag tag={tag} hidden={isDeleting} />
                 </div>
               </div>
             );

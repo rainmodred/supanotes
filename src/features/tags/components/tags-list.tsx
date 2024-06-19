@@ -61,14 +61,17 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
             return (
               <div
                 key={tag.id}
-                className={cn(`grid w-full grid-cols-3 px-2 pr-1`, {
-                  'bg-slate-200': selectedTagName === tag.name,
-                  'opacity-30': isDeleting,
-                })}
+                className={cn(
+                  `flex w-full items-center justify-between gap-2 px-2 pr-1`,
+                  {
+                    'bg-slate-200': selectedTagName === tag.name,
+                    'opacity-30': isDeleting,
+                  },
+                )}
               >
                 <Button
-                  variant="outline"
-                  className={`col-span-2 flex w-full justify-start gap-2 border-none bg-inherit px-0
+                  variant="ghost"
+                  className={`hover:none flex w-full grow justify-start gap-2 border-none bg-inherit px-0
                     py-0`}
                   onClick={() => onTagSelect(tag.name)}
                 >
@@ -77,11 +80,10 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                     {tag.name}
                   </span>
                 </Button>
-                <div className="place-self-end">
-                  {/* Not working, action works but loader is not called */}
-                  {/* {!isDeleting && <EditTag tag={tag} />} */}
-                  <EditTag tag={tag} hidden={isDeleting} />
-                </div>
+
+                {/* Not working, action works but loader is not called */}
+                {/* {!isDeleting && <EditTag tag={tag} />} */}
+                <EditTag tag={tag} hidden={isDeleting} />
               </div>
             );
           });

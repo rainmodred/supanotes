@@ -5,6 +5,7 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { noteQuery } from '@/features/note/api/get-note';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { NotesList } from '@/features/notes/components/notes-list';
 import { createTag } from '@/features/tags/api/create-tag';
@@ -13,7 +14,7 @@ import { tagsQuery } from '@/features/tags/api/get-tags';
 import { updateTag } from '@/features/tags/api/update-tag';
 import { CreateTag } from '@/features/tags/components/create-tag';
 import { TagsList } from '@/features/tags/components/tags-list';
-import { ITag } from '@/lib/types';
+import { INote, ITag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { QueryClient } from '@tanstack/react-query';
 import { Notebook, Plus } from 'lucide-react';
@@ -45,6 +46,27 @@ export const action =
         }
         return oldData;
       });
+
+      //send help
+      queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
+        if (oldData) {
+          for (const note of oldData) {
+            if (note.tags.some(tag => tag.id === rest.id)) {
+              queryClient.invalidateQueries(noteQuery(note.id, queryClient));
+            }
+          }
+
+          return oldData.map(note => {
+            return {
+              ...note,
+              tags: note.tags.map(tag =>
+                tag.id === rest.id ? { ...tag, name: rest.name } : tag,
+              ),
+            };
+          });
+        }
+      });
+
       await updateTag(rest);
 
       return { ok: true };
@@ -71,6 +93,23 @@ export const action =
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
           return oldData.filter(tag => tag.id !== rest.id);
+        }
+      });
+
+      queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
+        if (oldData) {
+          for (const note of oldData) {
+            if (note.tags.some(tag => tag.id === rest.id)) {
+              queryClient.invalidateQueries(noteQuery(note.id, queryClient));
+            }
+          }
+
+          return oldData.map(note => {
+            return {
+              ...note,
+              tags: note.tags.filter(tag => tag.id !== rest.id),
+            };
+          });
         }
       });
 

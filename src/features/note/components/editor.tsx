@@ -21,18 +21,26 @@ interface Props {
   note?: INote;
 }
 
-export function Editor({ note, type: intent }: Props) {
-  const fetcher = useFetcher();
-  const { session } = useAuth();
-  const { data: allTags } = useQuery({ ...tagsQuery });
-  //set note tags to MultipleSelector
-  const [value, setValue] = useState<Option[]>([
+function transformTags(note: INote | undefined) {
+  return [
     ...(note?.tags?.map(({ id, name }) => ({
       id,
       label: name,
       value: name,
     })) ?? []),
-  ]);
+  ];
+}
+
+export function Editor({ note, type: intent }: Props) {
+  const fetcher = useFetcher();
+  const { session } = useAuth();
+  const { data: allTags } = useQuery({ ...tagsQuery });
+  //set note tags to MultipleSelector
+  const [value, setValue] = useState<Option[]>(transformTags(note));
+  useEffect(() => {
+    console.log('effect');
+    setValue(transformTags(note));
+  }, [note]);
 
   const formRef = useRef<HTMLFormElement | null>(null);
   const [title, setTitle] = useState(note?.title ?? '');

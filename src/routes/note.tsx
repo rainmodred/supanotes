@@ -85,30 +85,41 @@ export const action =
       //TODO: handle error
       await addTag(noteId, rest.tag_id);
 
-      queryClient.setQueryData<INote>(queryKey, oldData => {
-        console.log(oldData);
-        if (!oldData) {
-          return;
+      queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
+        if (oldData) {
+          return oldData.map(note => {
+            if (note.id === noteId) {
+              return {
+                ...note,
+                tags: [...note.tags, { id: rest.tag_id, name: rest.tagName }],
+              };
+            }
+            return note;
+          });
         }
-        return {
-          ...oldData,
-          tags: [...oldData.tags, { id: rest.tag_id, name: rest.tagName }],
-        };
       });
+      queryClient.invalidateQueries(noteQuery(noteId, queryClient));
 
       return { ok: true };
     }
 
     if (intent === 'unselect-tag') {
       await removeTag(noteId, rest.tag_id);
-      queryClient.setQueryData<INote>(queryKey, oldData => {
+
+      queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
-          return {
-            ...oldData,
-            tags: oldData?.tags?.filter(tag => tag.id !== rest.tag_id),
-          };
+          return oldData.map(note => {
+            if (note.id === noteId) {
+              return {
+                ...note,
+                tags: note.tags.filter(tag => tag.id === rest.tag_id),
+              };
+            }
+            return note;
+          });
         }
       });
+      queryClient.invalidateQueries(noteQuery(noteId, queryClient));
       return { ok: true };
     }
 

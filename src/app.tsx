@@ -84,14 +84,20 @@ const router = createBrowserRouter([
   },
 ]);
 
-function App() {
+export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <AuthProvider>{children}</AuthProvider>
       <ReactQueryDevtools />
     </QueryClientProvider>
+  );
+}
+
+function App() {
+  return (
+    <AppProvider>
+      <RouterProvider router={router} />
+    </AppProvider>
   );
 }
 

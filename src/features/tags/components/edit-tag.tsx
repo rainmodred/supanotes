@@ -6,12 +6,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { useDebounce } from '@/components/ui/multiple-selector';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/auth';
 import { ITag } from '@/lib/types';
 import { Ellipsis, Trash2 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useFetcher } from 'react-router-dom';
 
 interface Props {
@@ -21,43 +20,24 @@ interface Props {
 export function EditTag({ tag, hidden }: Props) {
   const fetcher = useFetcher();
 
-  const [value, setValue] = useState(tag.name);
-  const debouncedTagName = useDebounce(value, 500);
-  const isNameChanged = useRef(false);
-
   const { session } = useAuth();
 
   const formRef = useRef<HTMLFormElement | null>(null);
   const [open, setOpen] = useState(false);
 
-  const { submit } = fetcher;
-  useEffect(() => {
-    if (!formRef.current || !open || !isNameChanged.current) {
-      return;
-    }
-
-    const formData = new FormData(formRef.current);
-    formData.append('intent', 'rename-tag');
-    const name = formData.get('name');
-    if (typeof name === 'string') {
-      if (name === '') {
-        return;
-      }
-    }
-
-    console.log(Object.fromEntries(formData));
-    submit(formData, { method: 'post' });
-  }, [debouncedTagName, open, submit]);
-
   function handleDelete() {
-    if (!formRef.current) {
+    if (!formRef.current || !session) {
       return;
     }
+
     const formData = new FormData(formRef.current);
+    formData.append('user_id', session?.user.id);
     formData.append('intent', 'delete-tag');
+    formData.append('id', tag.id);
 
     setOpen(false);
-    submit(formData, { method: 'delete' });
+    console.log(Object.fromEntries(formData));
+    fetcher.submit(formData, { method: 'delete' });
   }
 
   if (hidden) {
@@ -67,25 +47,30 @@ export function EditTag({ tag, hidden }: Props) {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button size="icon" variant="ghost">
+        <Button size="icon" variant="ghost" data-testid={`edit-${tag.name}`}>
           <Ellipsis size="12" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>Name</DropdownMenuLabel>
 
-        <fetcher.Form ref={formRef} method="delete">
-          <input name="user_id" defaultValue={session?.user.id} type="hidden" />
-          <input name="id" defaultValue={tag.id} type="hidden" />
-          <Input
-            className="my-2"
-            name="name"
-            value={value}
-            onChange={e => {
-              setValue(e.target.value);
-              isNameChanged.current = true;
-            }}
-          />
+        <fetcher.Form
+          ref={formRef}
+          method="post"
+          onSubmit={e => {
+            e.preventDefault();
+            if (!e.target || !formRef.current || !session) {
+              return;
+            }
+            const formData = new FormData(formRef.current);
+            formData.append('user_id', session?.user.id);
+            formData.append('id', tag.id);
+            formData.append('intent', 'rename-tag');
+            console.log(Object.fromEntries(formData));
+            fetcher.submit(formData, { method: 'post' });
+          }}
+        >
+          <Input className="my-2" name="name" defaultValue={tag.name} />
           <Separator className="mb-2" />
           <Button
             variant="outline"

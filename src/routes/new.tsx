@@ -1,42 +1,45 @@
-import { ActionFunctionArgs, json, redirect } from 'react-router-dom';
-import { Editor } from '@/features/note/components/editor';
+import { ActionFunctionArgs, Form, redirect } from 'react-router-dom';
 import { QueryClient } from '@tanstack/react-query';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { createNote } from '@/features/note/api/create-note';
+import { z } from 'zod';
+import { INote } from '@/lib/types';
+import { useAuth } from '@/lib/auth';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
+const scheme = z.object({ title: z.string(), userId: z.string() });
 export const action =
   (queryClient: QueryClient) =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
-    const values = Object.fromEntries(formData);
-    const intent = formData.get('intent');
+    const updates = Object.fromEntries(formData);
+    const { title, userId } = scheme.parse(updates);
 
-    console.log('new route action: ', { values });
-    if (intent === 'create') {
-      const note = await createNote(values);
-      if (!note.title) {
-        //TODO:
+    const note = await createNote({ title, userId });
+    queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
+      if (oldData) {
+        return [...oldData, { ...note }];
       }
-
-      // queryClient.setQueryData(noteQuery(note.id, queryClient).queryKey, note);
-      queryClient.setQueryData(notesQuery.queryKey, oldData => {
-        if (oldData) {
-          return [
-            ...oldData,
-            {
-              id: note.id,
-              title: note.title,
-              body: note.body,
-            },
-          ];
-        }
-      });
-      return redirect(`/notes/${note.id}`);
-    }
-
-    throw json({ message: 'Invalid intent' }, { status: 400 });
+    });
+    return redirect(`/notes/${note.id}`);
   };
 
 export function NewNote() {
-  return <Editor type="create" />;
+  const { session } = useAuth();
+  return (
+    <div className="flex h-full flex-col">
+      <Form method="post" className="h-full">
+        <div className="mb-1 flex gap-1">
+          {session && (
+            <input name="userId" value={session?.user.id} type="hidden" />
+          )}
+          <Input name="title" placeholder="title" required />
+          <Button variant="default" className="shrink-0">
+            Create Note
+          </Button>
+        </div>
+      </Form>
+    </div>
+  );
 }

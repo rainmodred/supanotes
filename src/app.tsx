@@ -5,19 +5,19 @@ import {
 } from 'react-router-dom';
 import { Root } from './routes/root';
 import { AuthProvider } from './lib/auth';
-import { Login, action as loginAction } from './routes/login';
-import { Register, action as registerAction } from './routes/register';
+import { Login, action as loginAction } from './routes/auth/login';
+import { Register, action as registerAction } from './routes/auth/register';
 import { PublicRoute } from './components/public-route';
 import {
   Notes,
   loader as notesLoader,
   action as notesAction,
-} from './routes/notes';
+} from './routes/notes/notes';
 import {
   Note,
   action as noteAction,
   loader as noteLoader,
-} from './routes/note';
+} from './routes/note/note';
 import { ProtectedRoute } from './components/protected-route';
 import { NewNote, action as newNoteAction } from './routes/new';
 import { QueryClientProvider } from '@tanstack/react-query';

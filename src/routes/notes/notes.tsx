@@ -1,10 +1,18 @@
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import { noteQuery } from '@/features/note/api/get-note';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { NotesList } from '@/features/notes/components/notes-list';
@@ -17,14 +25,16 @@ import { TagsList } from '@/features/tags/components/tags-list';
 import { INote, ITag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { QueryClient } from '@tanstack/react-query';
-import { Notebook, Plus } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { Ellipsis, Notebook, Plus } from 'lucide-react';
+import { useState, useRef, Suspense } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import {
   ActionFunctionArgs,
+  Await,
   Link,
   Outlet,
   defer,
+  useFetcher,
   useLoaderData,
 } from 'react-router-dom';
 
@@ -73,19 +83,14 @@ export const action =
     }
 
     if (intent === 'create-tag') {
-      // queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
-      //   if (oldData) {
-      //     return [...oldData, { name: rest.name, id: rest.name }];
-      //   }
-      // });
-
-      //TODO: Optimistic?
-      const returnedTag = await createTag(rest.name, rest.user_id);
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
-          return [...oldData, returnedTag];
+          return [...oldData, { name: rest.name, id: rest.name }];
         }
       });
+
+      await createTag(rest.name, rest.userId);
+      // await updateTagsCache('intent');
       return { ok: true };
     }
 
@@ -122,26 +127,31 @@ export const action =
   };
 
 export const loader = (queryClient: QueryClient) => async () => {
-  console.log('note loader');
+  console.log('notes loader');
   return defer({
     notes: queryClient.fetchQuery({ ...notesQuery }),
     tags: queryClient.fetchQuery({ ...tagsQuery }),
   });
 };
 
+interface DeferredLoaderData {
+  notes: Promise<INote[]>;
+  tags: Promise<ITag[]>;
+}
+
 export function Notes() {
-  const initialData = useLoaderData() as Awaited<
-    ReturnType<ReturnType<typeof loader>>
-  >;
+  const initialData = useLoaderData() as DeferredLoaderData;
   const [selectedTagName, setSelectedTagName] = useState('all');
 
-  function handleTagSelect(tagId: string) {
-    setSelectedTagName(tagId);
+  function handleTagSelect(tagName: string) {
+    setSelectedTagName(tagName);
   }
 
   //TODO: mobile layout
   const ref = useRef<ImperativePanelHandle>(null);
   const editorPanel = useRef<ImperativePanelHandle>(null);
+
+  // return <div data-testid="loading-tags">meow</div>;
 
   // useEffect(() => {
   //   const mql = window.matchMedia('(max-width: 720px)');
@@ -176,23 +186,23 @@ export function Notes() {
 </div> */
   }
 
+  //TODO: create component for div inside resizepanel?
   return (
     <ResizablePanelGroup
       direction="horizontal"
       className="min-h-screen rounded-lg border"
     >
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
-        <div className="h-full py-4">
-          <div className="flex h-full flex-col items-start">
-            <Button
-              variant="outline"
-              className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
-              onClick={() => handleTagSelect('all')}
-            >
-              <Notebook size="16px" />
-              All Notes
-            </Button>
-            {/* <Button
+        <div className="h-full py-4 ">
+          <Button
+            variant="outline"
+            className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
+            onClick={() => handleTagSelect('all')}
+          >
+            <Notebook size="16px" />
+            All Notes
+          </Button>
+          {/* <Button
                 variant="outline"
                 className="flex w-full justify-start gap-2 border-none"
                 onClick={() => handleTagSelect('all')}
@@ -200,16 +210,12 @@ export function Notes() {
                 <Trash />
                 Trash
               </Button> */}
-
-            <CreateTag />
-            <ScrollArea className="h-full w-full ">
-              <TagsList
-                selectedTagName={selectedTagName}
-                onTagSelect={handleTagSelect}
-                tags={initialData.tags}
-              />
-            </ScrollArea>
-          </div>
+          <CreateTag />
+          <TagsList
+            selectedTagName={selectedTagName}
+            onTagSelect={handleTagSelect}
+            tags={initialData.tags}
+          />
         </div>
       </ResizablePanel>
       <ResizableHandle />
@@ -220,6 +226,7 @@ export function Notes() {
             <Link
               to="new"
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+              data-testid="create-note"
             >
               <Plus size="16px" />
             </Link>

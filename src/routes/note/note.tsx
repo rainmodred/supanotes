@@ -29,7 +29,7 @@ export const action =
     const { intent, ...rest } = updates;
     console.log('note action', updates, intent);
 
-    const noteId = rest.note_id.toString();
+    const noteId = rest.noteId.toString();
     const { queryKey } = noteQuery(noteId, queryClient);
     if (intent === 'edit') {
       const returnedNote = await updateNote(rest);
@@ -58,7 +58,7 @@ export const action =
     }
 
     if (intent === 'create-tag') {
-      const returnedTag = await createTag(rest.tagName, rest.user_id);
+      const returnedTag = await createTag(rest.tagName, rest.userId);
       if (!returnedTag) {
         return { ok: false };
       }
@@ -83,7 +83,7 @@ export const action =
     if (intent === 'select-tag') {
       console.log('select-tag', rest);
       //TODO: handle error
-      await addTag(noteId, rest.tag_id);
+      await addTag(noteId, rest.tagId);
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
@@ -91,7 +91,7 @@ export const action =
             if (note.id === noteId) {
               return {
                 ...note,
-                tags: [...note.tags, { id: rest.tag_id, name: rest.tagName }],
+                tags: [...note.tags, { id: rest.tagId, name: rest.tagName }],
               };
             }
             return note;
@@ -104,7 +104,7 @@ export const action =
     }
 
     if (intent === 'unselect-tag') {
-      await removeTag(noteId, rest.tag_id);
+      await removeTag(noteId, rest.tagId);
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
@@ -112,7 +112,7 @@ export const action =
             if (note.id === noteId) {
               return {
                 ...note,
-                tags: note.tags.filter(tag => tag.id === rest.tag_id),
+                tags: note.tags.filter(tag => tag.id === rest.tagId),
               };
             }
             return note;
@@ -129,14 +129,17 @@ export const action =
 export const loader =
   (queryClient: QueryClient) =>
   async ({ params }: LoaderFunctionArgs) => {
+    console.log('params loader', params);
     const query = noteQuery(params.noteId!, queryClient);
     return defer({ note: queryClient.fetchQuery({ ...query }) });
   };
 
+interface DeferredLoaderData {
+  note: Promise<INote>;
+}
+
 export function Note() {
-  const initialData = useLoaderData() as Awaited<
-    ReturnType<ReturnType<typeof loader>>
-  >;
+  const initialData = useLoaderData() as DeferredLoaderData;
 
   return (
     <Suspense

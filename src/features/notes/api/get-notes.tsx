@@ -19,7 +19,7 @@ async function fetchNotes() {
       tags(id, name)
     `,
     )
-    .returns<Omit<INote, 'user_id'>[]>();
+    .returns<Omit<INote, 'userId'>[]>();
   if (error) {
     throw error;
   }

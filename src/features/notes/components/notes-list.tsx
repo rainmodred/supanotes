@@ -22,29 +22,29 @@ export function NotesList({ selectedTagName, notes }: Props) {
           onChange={e => setSearch(e.target.value)}
         />
       </div>
-      <ScrollArea className="h-full">
-        <Suspense
-          fallback={
-            <div className="px-2">
-              {Array.from({ length: 20 }).map((_, i) => {
-                return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
-              })}
-            </div>
-          }
-        >
-          <Await resolve={notes}>
-            {notes => {
-              return (
+      <Suspense
+        fallback={
+          <div className="px-2" data-testid="loading-notes">
+            {Array.from({ length: 20 }).map((_, i) => {
+              return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
+            })}
+          </div>
+        }
+      >
+        <Await resolve={notes}>
+          {notes => {
+            return (
+              <ScrollArea className="h-full">
                 <FilteredNotes
                   notes={notes}
                   tagName={selectedTagName}
                   search={search}
                 />
-              );
-            }}
-          </Await>
-        </Suspense>
-      </ScrollArea>
+              </ScrollArea>
+            );
+          }}
+        </Await>
+      </Suspense>
     </>
   );
 }

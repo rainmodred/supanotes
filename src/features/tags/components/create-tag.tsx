@@ -32,9 +32,10 @@ export function CreateTag() {
       return;
     }
 
-    const formData = new FormData(formRef.current);
+    const formData = new FormData(e.target);
     const newTag = formData.get('name');
     formData.append('intent', 'create-tag');
+    formData.append('userId', session?.user.id);
 
     if (newTag) {
       if (tags?.some(tag => tag.name === newTag)) {
@@ -69,7 +70,6 @@ export function CreateTag() {
           ref={formRef}
           onSubmit={e => handleSubmit(e)}
         >
-          <input name="user_id" defaultValue={session?.user.id} type="hidden" />
           <div className="w-full">
             <Input
               placeholder="Add tag"

@@ -31,12 +31,10 @@ export function EditTag({ tag, hidden }: Props) {
     }
 
     const formData = new FormData(formRef.current);
-    formData.append('user_id', session?.user.id);
     formData.append('intent', 'delete-tag');
     formData.append('id', tag.id);
 
     setOpen(false);
-    console.log(Object.fromEntries(formData));
     fetcher.submit(formData, { method: 'delete' });
   }
 
@@ -59,18 +57,17 @@ export function EditTag({ tag, hidden }: Props) {
           method="post"
           onSubmit={e => {
             e.preventDefault();
-            if (!e.target || !formRef.current || !session) {
+            if (!formRef.current || !session) {
               return;
             }
             const formData = new FormData(formRef.current);
-            formData.append('user_id', session?.user.id);
             formData.append('id', tag.id);
             formData.append('intent', 'rename-tag');
-            console.log(Object.fromEntries(formData));
             fetcher.submit(formData, { method: 'post' });
           }}
         >
           <Input className="my-2" name="name" defaultValue={tag.name} />
+
           <Separator className="mb-2" />
           <Button
             variant="outline"

@@ -17,7 +17,7 @@ import { tagsQuery } from '@/features/tags/api/get-tags';
 import { cn } from '@/lib/utils';
 
 interface Props {
-  type: 'create' | 'edit';
+  type: 'create-note' | 'edit';
   note?: INote;
 }
 
@@ -38,7 +38,6 @@ export function Editor({ note, type: intent }: Props) {
   //set note tags to MultipleSelector
   const [value, setValue] = useState<Option[]>(transformTags(note));
   useEffect(() => {
-    console.log('effect');
     setValue(transformTags(note));
   }, [note]);
 
@@ -64,12 +63,12 @@ export function Editor({ note, type: intent }: Props) {
     }
 
     const formData = new FormData(formRef.current);
-    if (!formData.get('title')) {
-      //Show error?
-      return;
-    }
+    // if (!formData.get('title')) {
+    //   //Show error?
+    //   return;
+    // }
     formData.append('intent', intent);
-    // console.log(Object.fromEntries(formData), { intent });
+    console.log(intent, Object.fromEntries(formData), { intent });
     submit(formData, { method: 'post' });
   }, [
     debouncedTitle,
@@ -97,13 +96,14 @@ export function Editor({ note, type: intent }: Props) {
     }
 
     if (intent === 'select-tag' || intent === 'unselect-tag') {
-      formData.append('tag_id', id);
+      formData.append('tagId', id);
       formData.append('tagName', value);
     }
 
     formData.append('intent', intent);
     fetcher.submit(formData, { method: 'post' });
   }
+  // console.log('fetcher', fetcher.state);
 
   return (
     <div className="flex h-full flex-col">
@@ -111,9 +111,9 @@ export function Editor({ note, type: intent }: Props) {
         <fetcher.Form method="post" className="h-full" ref={formRef}>
           <div className="flex flex-col">
             {session && (
-              <input name="user_id" value={session?.user.id} type="hidden" />
+              <input name="userId" value={session?.user.id} type="hidden" />
             )}
-            {note && <input name="note_id" value={note.id} type="hidden" />}
+            {note && <input name="noteId" value={note.id} type="hidden" />}
             <div className="mb-1 flex gap-1">
               <Input
                 name="title"
@@ -133,15 +133,14 @@ export function Editor({ note, type: intent }: Props) {
                 {mode === 'edit' && <Pencil />}
                 {mode === 'read' && <Eye />}
               </Button>
-
               <div className="flex h-10 w-10 items-center justify-center border border-input bg-background">
                 <RefreshCw
+                  data-testid="loading"
                   className={cn({
                     'animate-spin': fetcher.state === 'submitting',
                   })}
                 />
               </div>
-
               <Button
                 variant="outline"
                 size="icon"

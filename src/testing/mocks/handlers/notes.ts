@@ -1,13 +1,21 @@
 import { delay, http, HttpResponse } from 'msw';
-import { createTag, db } from '../db';
-import { ITag } from '@/lib/types';
+import { createFakeNote, db } from '../db';
+import { INote } from '@/lib/types';
 
 export const API_URL = import.meta.env.VITE_URL;
 export const notesHandlers = [
-  http.get(`${API_URL}/rest/v1/tags`, async () => {
+  http.get(`${API_URL}/rest/v1/notes`, async ({ request }) => {
     await delay();
     try {
-      return HttpResponse.json(db.tag.getAll());
+      const url = new URL(request.url);
+      const note_id = url.searchParams.get('id')?.slice(3);
+      if (note_id) {
+        return HttpResponse.json([
+          db.note.findFirst({ where: { id: { equals: note_id } } }),
+        ]);
+      }
+
+      return HttpResponse.json(db.note.getAll());
     } catch (error: any) {
       return HttpResponse.json(
         { message: error?.message || 'Server Error' },
@@ -16,16 +24,17 @@ export const notesHandlers = [
     }
   }),
 
-  http.patch(`${API_URL}/rest/v1/tags`, async ({ request }) => {
+  http.patch(`${API_URL}/rest/v1/notes`, async ({ request }) => {
     await delay();
     try {
-      const renamedTag = (await request.json()) as ITag;
-      console.log('renamedTag', renamedTag);
-      const addedTag = db.tag.update({
-        where: { id: { equals: renamedTag.id } },
-        data: { name: renamedTag.name },
+      const patchedNote = (await request.json()) as INote;
+
+      const updated = db.note.update({
+        where: { id: { equals: patchedNote.id } },
+        data: patchedNote,
       });
-      return HttpResponse.json([addedTag]);
+
+      return HttpResponse.json([updated]);
     } catch (error: any) {
       return HttpResponse.json(
         { message: error?.message || 'Server Error' },
@@ -34,12 +43,15 @@ export const notesHandlers = [
     }
   }),
 
-  http.post(`${API_URL}/rest/v1/tags`, async ({ request }) => {
+  http.post(`${API_URL}/rest/v1/notes`, async ({ request }) => {
     await delay();
     try {
-      const newTag = (await request.json()) as ITag;
-      const addedTag = createTag(newTag.name);
-      return HttpResponse.json([addedTag]);
+      const note = (await request.json()) as INote;
+      const addedNote = createFakeNote({
+        title: note.title,
+        body: note.body,
+      });
+      return HttpResponse.json([addedNote]);
     } catch (error: any) {
       return HttpResponse.json(
         { message: error?.message || 'Server Error' },
@@ -48,7 +60,7 @@ export const notesHandlers = [
     }
   }),
 
-  http.delete(`${API_URL}/rest/v1/tags`, async ({ request }) => {
+  http.delete(`${API_URL}/rest/v1/notes`, async ({ request }) => {
     await delay();
     try {
       const url = new URL(request.url);
@@ -56,10 +68,8 @@ export const notesHandlers = [
       if (!id) {
         throw new Error();
       }
-
-      db.tag.delete({ where: { id: { equals: id } } });
-
-      return new HttpResponse(null, { status: 404 });
+      db.note.delete({ where: { id: { equals: id } } });
+      return new HttpResponse(null, { status: 204 });
     } catch (error: any) {
       return HttpResponse.json(
         { message: error?.message || 'Server Error' },

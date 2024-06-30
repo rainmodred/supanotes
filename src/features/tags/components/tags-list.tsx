@@ -70,7 +70,7 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                       className={cn(
                         `mt-0 flex w-full items-center justify-between gap-2 px-2 pr-1`,
                         {
-                          'bg-slate-200': selectedTagName === tag.name,
+                          'bg-accent': selectedTagName === tag.name,
                           'opacity-30': isDeleting,
                         },
                       )}

@@ -1,3 +1,4 @@
+import { ModeToggle } from '@/components/mode-toggle';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   ResizablePanelGroup,
@@ -16,7 +17,7 @@ import { TagsList } from '@/features/tags/components/tags-list';
 import { INote, ITag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { QueryClient } from '@tanstack/react-query';
-import { Notebook, Plus } from 'lucide-react';
+import { LogOut, Notebook, Plus } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import {
@@ -193,10 +194,12 @@ export function Notes() {
       className="min-h-screen rounded-lg border"
     >
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
-        <div className="h-full py-4 ">
+        <div className="flex h-full flex-col py-4">
           <Button
             variant="outline"
-            className={`flex w-full justify-start gap-2 border-none ${selectedTagName === null ? 'bg-slate-200' : ''}`}
+            className={cn('flex w-full justify-start gap-2 border-none', {
+              'bg-accent': selectedTagName,
+            })}
             onClick={() => setSelectedTagName(null)}
           >
             <Notebook size="16" />
@@ -213,14 +216,21 @@ export function Notes() {
           <CreateTag />
           <TagsList
             selectedTagName={selectedTagName}
-            onTagSelect={handleTagSelect}
+            onTagSelect={setSelectedTagName}
             tags={initialData.tags}
           />
+          <div className="flex items-center justify-between p-2">
+            {/* <p>test@exampe.com</p> */}
+            <ModeToggle />
+            <Button variant="ghost" size="icon">
+              <LogOut size="16" />
+            </Button>
+          </div>
         </div>
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
-        <div className="h-full py-4 pb-32">
+        <div className="flex h-full flex-col py-4">
           <div className="flex items-center justify-between px-4 py-2">
             <p className="font-semibold">
               {selectedTagName === null ? 'Notes' : `# ${selectedTagName}`}

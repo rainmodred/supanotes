@@ -9,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/auth';
 import { ITag } from '@/lib/types';
+import { useQuery } from '@tanstack/react-query';
 import { Ellipsis, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useFetcher } from 'react-router-dom';
+import { tagsQuery } from '../api/get-tags';
 
 interface Props {
   tag: ITag;
@@ -22,7 +24,10 @@ export function EditTag({ tag, hidden }: Props) {
 
   const { session } = useAuth();
 
+  const { data: tags } = useQuery({ ...tagsQuery });
+
   const formRef = useRef<HTMLFormElement | null>(null);
+  const [formError, setFormError] = useState('');
   const [open, setOpen] = useState(false);
 
   function handleDelete() {
@@ -63,10 +68,23 @@ export function EditTag({ tag, hidden }: Props) {
             const formData = new FormData(formRef.current);
             formData.append('id', tag.id);
             formData.append('intent', 'rename-tag');
-            fetcher.submit(formData, { method: 'post' });
+
+            const renamedTag = formData.get('name');
+            if (renamedTag) {
+              if (tags?.some(tag => tag.name === renamedTag)) {
+                setFormError('Tag already exists');
+              } else {
+                setFormError('');
+                setOpen(false);
+                fetcher.submit(formData, { method: 'post' });
+              }
+            }
           }}
         >
           <Input className="my-2" name="name" defaultValue={tag.name} />
+          {formError && (
+            <p className="text-xs font-medium text-destructive">{formError}</p>
+          )}
 
           <Separator className="mb-2" />
           <Button

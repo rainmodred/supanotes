@@ -1,18 +1,9 @@
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
 import { noteQuery } from '@/features/note/api/get-note';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { NotesList } from '@/features/notes/components/notes-list';
@@ -25,33 +16,48 @@ import { TagsList } from '@/features/tags/components/tags-list';
 import { INote, ITag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { QueryClient } from '@tanstack/react-query';
-import { Ellipsis, Notebook, Plus } from 'lucide-react';
-import { useState, useRef, Suspense } from 'react';
+import { Notebook, Plus } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import {
   ActionFunctionArgs,
-  Await,
   Link,
   Outlet,
   defer,
-  useFetcher,
   useLoaderData,
 } from 'react-router-dom';
+import { z } from 'zod';
 
+const schema = z.discriminatedUnion('intent', [
+  z.object({
+    intent: z.literal('rename-tag'),
+    id: z.string(),
+    name: z.string(),
+  }),
+  z.object({
+    intent: z.literal('delete-tag'),
+    id: z.string(),
+    name: z.string(),
+  }),
+  z.object({
+    intent: z.literal('create-tag'),
+    name: z.string(),
+    userId: z.string(),
+  }),
+]);
 export const action =
   (queryClient: QueryClient) =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const updates = Object.fromEntries(formData);
-    const { intent, ...rest } = updates;
-    console.log('note action', intent, rest);
+    const payload = schema.parse(updates);
+    console.log('note action', payload);
 
-    if (intent === 'rename-tag') {
-      //TODO: handle error
+    if (payload.intent === 'rename-tag') {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
           return oldData.map(tag =>
-            tag.id === rest.id ? { ...tag, name: rest.name } : tag,
+            tag.id === payload.id ? { ...tag, name: payload.name } : tag,
           );
         }
         return oldData;
@@ -61,7 +67,7 @@ export const action =
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
           for (const note of oldData) {
-            if (note.tags.some(tag => tag.id === rest.id)) {
+            if (note.tags.some(tag => tag.id === payload.id)) {
               queryClient.invalidateQueries(noteQuery(note.id, queryClient));
             }
           }
@@ -70,41 +76,40 @@ export const action =
             return {
               ...note,
               tags: note.tags.map(tag =>
-                tag.id === rest.id ? { ...tag, name: rest.name } : tag,
+                tag.id === payload.id ? { ...tag, name: payload.name } : tag,
               ),
             };
           });
         }
       });
 
-      await updateTag(rest);
+      await updateTag({ id: payload.id, name: payload.name });
 
       return { ok: true };
     }
 
-    if (intent === 'create-tag') {
+    if (payload.intent === 'create-tag') {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
-          return [...oldData, { name: rest.name, id: rest.name }];
+          return [...oldData, { name: payload.name, id: payload.name }];
         }
       });
 
-      await createTag(rest.name, rest.userId);
-      // await updateTagsCache('intent');
+      await createTag(payload.name, payload.userId);
       return { ok: true };
     }
 
-    if (intent === 'delete-tag') {
+    if (payload.intent === 'delete-tag') {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
-          return oldData.filter(tag => tag.id !== rest.id);
+          return oldData.filter(tag => tag.id !== payload.id);
         }
       });
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
           for (const note of oldData) {
-            if (note.tags.some(tag => tag.id === rest.id)) {
+            if (note.tags.some(tag => tag.id === payload.id)) {
               queryClient.invalidateQueries(noteQuery(note.id, queryClient));
             }
           }
@@ -112,22 +117,21 @@ export const action =
           return oldData.map(note => {
             return {
               ...note,
-              tags: note.tags.filter(tag => tag.id !== rest.id),
+              tags: note.tags.filter(tag => tag.id !== payload.id),
             };
           });
         }
       });
 
-      await deleteTag(rest.id);
+      await deleteTag(payload.id);
 
       return { ok: true };
     }
 
-    return null;
+    throw new Error('Invalid intent');
   };
 
 export const loader = (queryClient: QueryClient) => async () => {
-  console.log('notes loader');
   return defer({
     notes: queryClient.fetchQuery({ ...notesQuery }),
     tags: queryClient.fetchQuery({ ...tagsQuery }),

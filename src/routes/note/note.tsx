@@ -20,48 +20,85 @@ import { updateNote } from '@/features/note/api/update-note';
 import { deleteNote } from '@/features/note/api/delete-note';
 import { removeTag } from '@/features/note/api/remove-tag';
 import { addTag } from '@/features/note/api/add-tag';
+import { z } from 'zod';
+
+const schema = z.discriminatedUnion('intent', [
+  z.object({
+    intent: z.literal('select-tag'),
+    tagName: z.string(),
+    tagId: z.string(),
+    userId: z.string(),
+  }),
+  z.object({
+    intent: z.literal('unselect-tag'),
+    tagName: z.string(),
+    tagId: z.string(),
+    userId: z.string(),
+  }),
+  z.object({
+    intent: z.literal('create-tag'),
+    tagName: z.string(),
+    userId: z.string(),
+  }),
+  z.object({
+    intent: z.literal('update-note'),
+    userId: z.string(),
+    title: z.string(),
+    body: z.string(),
+  }),
+  z.object({
+    intent: z.literal('delete-note'),
+    userId: z.string(),
+    title: z.string(),
+    body: z.string(),
+  }),
+]);
 
 export const action =
   (queryClient: QueryClient) =>
-  async ({ request }: ActionFunctionArgs) => {
+  async ({ request, params }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const updates = Object.fromEntries(formData);
-    const { intent, ...rest } = updates;
-    console.log('note action', updates, intent);
+    const payload = schema.parse(updates);
 
-    const noteId = rest.noteId.toString();
-    const { queryKey } = noteQuery(noteId, queryClient);
-    if (intent === 'edit') {
-      const returnedNote = await updateNote(rest);
-      await queryClient.setQueryData(queryKey, oldData => {
+    if (!params.noteId) {
+      throw new Error('noteId not found');
+    }
+
+    const noteId = params.noteId;
+    const { queryKey: noteQueryKey } = noteQuery(noteId, queryClient);
+    if (payload.intent === 'update-note') {
+      const returnedNote = await updateNote({
+        title: payload.title,
+        body: payload.body,
+        noteId,
+      });
+      queryClient.setQueryData<INote>(noteQueryKey, oldData => {
         if (oldData) {
           return {
             ...oldData,
-            body: returnedNote.body,
+            created_at: returnedNote.created_at,
             updated_at: returnedNote.updated_at,
           };
         }
       });
       return { ok: true };
     }
-    if (intent === 'delete') {
+    if (payload.intent === 'delete-note') {
       await deleteNote(noteId);
+
       queryClient.removeQueries({
-        queryKey,
+        queryKey: noteQueryKey,
       });
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData =>
         oldData?.filter(note => note.id !== noteId),
       );
-
       return redirect(`/notes`);
     }
 
-    if (intent === 'create-tag') {
-      const returnedTag = await createTag(rest.tagName, rest.userId);
-      if (!returnedTag) {
-        return { ok: false };
-      }
+    if (payload.intent === 'create-tag') {
+      const returnedTag = await createTag(payload.tagName, payload.userId);
 
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
@@ -69,7 +106,7 @@ export const action =
         }
         return [returnedTag];
       });
-      queryClient.setQueryData<INote>(queryKey, oldData => {
+      queryClient.setQueryData<INote>(noteQueryKey, oldData => {
         if (oldData) {
           return { ...oldData, tags: [...oldData.tags, returnedTag] };
         }
@@ -80,10 +117,8 @@ export const action =
       return { ok: true };
     }
 
-    if (intent === 'select-tag') {
-      console.log('select-tag', rest);
-      //TODO: handle error
-      await addTag(noteId, rest.tagId);
+    if (payload.intent === 'select-tag') {
+      await addTag(noteId, payload.tagId);
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
@@ -91,7 +126,10 @@ export const action =
             if (note.id === noteId) {
               return {
                 ...note,
-                tags: [...note.tags, { id: rest.tagId, name: rest.tagName }],
+                tags: [
+                  ...note.tags,
+                  { id: payload.tagId, name: payload.tagName },
+                ],
               };
             }
             return note;
@@ -103,8 +141,8 @@ export const action =
       return { ok: true };
     }
 
-    if (intent === 'unselect-tag') {
-      await removeTag(noteId, rest.tagId);
+    if (payload.intent === 'unselect-tag') {
+      await removeTag(noteId, payload.tagId);
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
@@ -112,7 +150,7 @@ export const action =
             if (note.id === noteId) {
               return {
                 ...note,
-                tags: note.tags.filter(tag => tag.id === rest.tagId),
+                tags: note.tags.filter(tag => tag.id === payload.tagId),
               };
             }
             return note;
@@ -129,7 +167,6 @@ export const action =
 export const loader =
   (queryClient: QueryClient) =>
   async ({ params }: LoaderFunctionArgs) => {
-    console.log('params loader', params);
     const query = noteQuery(params.noteId!, queryClient);
     return defer({ note: queryClient.fetchQuery({ ...query }) });
   };
@@ -149,7 +186,7 @@ export function Note() {
     >
       <Await resolve={initialData.note}>
         {note => {
-          return <Editor note={note} type="edit" key={note.id} />;
+          return <Editor note={note} key={note.id} />;
         }}
       </Await>
     </Suspense>

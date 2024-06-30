@@ -28,14 +28,14 @@ export function CreateTag() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!formRef.current) {
+    if (!formRef.current || !session) {
       return;
     }
 
-    const formData = new FormData(e.target);
+    const formData = new FormData(formRef.current);
     const newTag = formData.get('name');
     formData.append('intent', 'create-tag');
-    formData.append('userId', session?.user.id);
+    formData.append('userId', session.user.id);
 
     if (newTag) {
       if (tags?.some(tag => tag.name === newTag)) {

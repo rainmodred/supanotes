@@ -4,7 +4,7 @@ import { db } from '../db';
 export const API_URL = import.meta.env.VITE_URL;
 export const noteTagsHandlers = [
   http.post(`${API_URL}/rest/v1/notes_tags`, async ({ request }) => {
-    await delay();
+    await delay(200);
     try {
       const { note_id, tag_id } = (await request.json()) as {
         note_id: string;
@@ -32,7 +32,7 @@ export const noteTagsHandlers = [
   }),
 
   http.delete(`${API_URL}/rest/v1/notes_tags`, async ({ request }) => {
-    await delay();
+    await delay(200);
 
     try {
       const url = new URL(request.url);

@@ -5,16 +5,14 @@ export async function updateNote({
   noteId,
   title,
   body,
-  userId,
 }: {
   noteId: string;
   title: string;
   body: string;
-  userId: string;
 }) {
   const { data, error } = await supabase
     .from('notes')
-    .update({ id: noteId, title, body, user_id: userId })
+    .update({ id: noteId, title, body })
     .eq('id', noteId)
     .select()
     .returns<INote[]>();

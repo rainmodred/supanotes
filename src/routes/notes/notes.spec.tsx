@@ -17,8 +17,6 @@ import {
 import { supabase } from '@/lib/supabase';
 import { renderApp } from '@/testing/test-utils';
 import { NewNote, action as newNoteAction } from '../new';
-import { RouterProvider, createMemoryRouter } from 'react-router-dom';
-import { AppProvider } from '@/app';
 
 class ResizeObserver {
   observe() {}
@@ -157,6 +155,27 @@ describe('NotesRoute', () => {
 
       expect(await screen.findByText('movies')).toBeInTheDocument();
     });
+
+    it('should show error', async () => {
+      const tag = createFakeTag();
+      const tag1 = createFakeTag();
+      const user = userEvent.setup();
+      renderApp(<Notes />, {
+        path: '/notes',
+        url: '/notes',
+        loader: notesLoader(queryClient),
+        action: notesAction(queryClient),
+      });
+
+      const dropdown = await screen.findByTestId(`edit-${tag?.name}`);
+      await user.click(dropdown);
+      const input = screen.getByDisplayValue(tag?.name);
+
+      await user.clear(input);
+      await user.type(input, `${tag1.name}{enter}`);
+
+      expect(screen.getByText(/tag already exists/i)).toBeInTheDocument();
+    });
     it.skip('action example', async () => {
       const formData = new FormData();
       formData.append('intent', 'test');
@@ -234,19 +253,19 @@ describe('NotesRoute', () => {
         }),
       ).toBeInTheDocument();
     });
-  });
 
-  it.skip('should create note', async () => {
-    const user = userEvent.setup();
-    renderApp(<NewNote />, {
-      path: '/notes/:noteId',
-      url: '/notes/new',
-      action: newNoteAction(queryClient),
+    it.skip('should create note', async () => {
+      const user = userEvent.setup();
+      renderApp(<NewNote />, {
+        path: '/notes/:noteId',
+        url: '/notes/new',
+        action: newNoteAction(queryClient),
+      });
+
+      const titleInput = await screen.findByPlaceholderText(/title/i);
+      await user.type(titleInput, 'My new note{enter}');
+      //TODO:
+      // screen.debug(undefined, Infinity);
     });
-
-    const titleInput = await screen.findByPlaceholderText(/title/i);
-    await user.type(titleInput, 'My new note{enter}');
-    //TODO:
-    // screen.debug(undefined, Infinity);
   });
 });

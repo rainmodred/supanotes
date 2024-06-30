@@ -100,6 +100,7 @@ describe('NoteRoute', () => {
   });
 
   it('should create, select and unselect tag', async () => {
+    //sometimes fails
     vi.useRealTimers();
     const fakeTag = createFakeTag();
 

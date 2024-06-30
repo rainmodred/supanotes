@@ -1,11 +1,11 @@
 import { supabase } from '@/lib/supabase';
 
-export async function removeTag(note_id: string, tag_id: string) {
+export async function removeTag(noteId: string, tagId: string) {
   const { error } = await supabase
     .from('notes_tags')
     .delete()
-    .eq('note_id', note_id)
-    .eq('tag_id', tag_id);
+    .eq('note_id', noteId)
+    .eq('tag_id', tagId);
   if (error) {
     throw error;
   }

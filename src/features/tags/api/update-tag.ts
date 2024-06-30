@@ -1,18 +1,10 @@
 import { supabase } from '@/lib/supabase';
 import { ITag } from '@/lib/types';
 
-export async function updateTag({
-  id,
-  name,
-  user_id,
-}: {
-  id: string;
-  name: string;
-  user_id: string;
-}) {
+export async function updateTag({ id, name }: { id: string; name: string }) {
   const { data, error } = await supabase
     .from('tags')
-    .update({ id, name, user_id })
+    .update({ id, name })
     .eq('id', id)
     .select()
     .returns<ITag[]>();

@@ -4,7 +4,6 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { noteQuery } from '@/features/note/api/get-note';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { NotesList } from '@/features/notes/components/notes-list';
@@ -27,21 +26,38 @@ import {
   defer,
   useLoaderData,
 } from 'react-router-dom';
+import { z } from 'zod';
 
+const schema = z.discriminatedUnion('intent', [
+  z.object({
+    intent: z.literal('rename-tag'),
+    id: z.string(),
+    name: z.string(),
+  }),
+  z.object({
+    intent: z.literal('delete-tag'),
+    id: z.string(),
+    name: z.string(),
+  }),
+  z.object({
+    intent: z.literal('create-tag'),
+    name: z.string(),
+    userId: z.string(),
+  }),
+]);
 export const action =
   (queryClient: QueryClient) =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const updates = Object.fromEntries(formData);
-    const { intent, ...rest } = updates;
-    console.log('note action', intent, rest);
+    const payload = schema.parse(updates);
+    console.log('note action', payload);
 
-    if (intent === 'rename-tag') {
-      //TODO: handle error
+    if (payload.intent === 'rename-tag') {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
           return oldData.map(tag =>
-            tag.id === rest.id ? { ...tag, name: rest.name } : tag,
+            tag.id === payload.id ? { ...tag, name: payload.name } : tag,
           );
         }
         return oldData;
@@ -51,7 +67,7 @@ export const action =
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
           for (const note of oldData) {
-            if (note.tags.some(tag => tag.id === rest.id)) {
+            if (note.tags.some(tag => tag.id === payload.id)) {
               queryClient.invalidateQueries(noteQuery(note.id, queryClient));
             }
           }
@@ -60,46 +76,40 @@ export const action =
             return {
               ...note,
               tags: note.tags.map(tag =>
-                tag.id === rest.id ? { ...tag, name: rest.name } : tag,
+                tag.id === payload.id ? { ...tag, name: payload.name } : tag,
               ),
             };
           });
         }
       });
 
-      await updateTag(rest);
+      await updateTag({ id: payload.id, name: payload.name });
 
       return { ok: true };
     }
 
-    if (intent === 'create-tag') {
-      // queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
-      //   if (oldData) {
-      //     return [...oldData, { name: rest.name, id: rest.name }];
-      //   }
-      // });
-
-      //TODO: Optimistic?
-      const returnedTag = await createTag(rest.name, rest.user_id);
+    if (payload.intent === 'create-tag') {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
-          return [...oldData, returnedTag];
+          return [...oldData, { name: payload.name, id: payload.name }];
         }
       });
+
+      await createTag(payload.name, payload.userId);
       return { ok: true };
     }
 
-    if (intent === 'delete-tag') {
+    if (payload.intent === 'delete-tag') {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
-          return oldData.filter(tag => tag.id !== rest.id);
+          return oldData.filter(tag => tag.id !== payload.id);
         }
       });
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
         if (oldData) {
           for (const note of oldData) {
-            if (note.tags.some(tag => tag.id === rest.id)) {
+            if (note.tags.some(tag => tag.id === payload.id)) {
               queryClient.invalidateQueries(noteQuery(note.id, queryClient));
             }
           }
@@ -107,41 +117,45 @@ export const action =
           return oldData.map(note => {
             return {
               ...note,
-              tags: note.tags.filter(tag => tag.id !== rest.id),
+              tags: note.tags.filter(tag => tag.id !== payload.id),
             };
           });
         }
       });
 
-      await deleteTag(rest.id);
+      await deleteTag(payload.id);
 
       return { ok: true };
     }
 
-    return null;
+    throw new Error('Invalid intent');
   };
 
 export const loader = (queryClient: QueryClient) => async () => {
-  console.log('note loader');
   return defer({
     notes: queryClient.fetchQuery({ ...notesQuery }),
     tags: queryClient.fetchQuery({ ...tagsQuery }),
   });
 };
 
+interface DeferredLoaderData {
+  notes: Promise<INote[]>;
+  tags: Promise<ITag[]>;
+}
+
 export function Notes() {
-  const initialData = useLoaderData() as Awaited<
-    ReturnType<ReturnType<typeof loader>>
-  >;
+  const initialData = useLoaderData() as DeferredLoaderData;
   const [selectedTagName, setSelectedTagName] = useState('all');
 
-  function handleTagSelect(tagId: string) {
-    setSelectedTagName(tagId);
+  function handleTagSelect(tagName: string) {
+    setSelectedTagName(tagName);
   }
 
   //TODO: mobile layout
   const ref = useRef<ImperativePanelHandle>(null);
   const editorPanel = useRef<ImperativePanelHandle>(null);
+
+  // return <div data-testid="loading-tags">meow</div>;
 
   // useEffect(() => {
   //   const mql = window.matchMedia('(max-width: 720px)');
@@ -176,23 +190,23 @@ export function Notes() {
 </div> */
   }
 
+  //TODO: create component for div inside resizepanel?
   return (
     <ResizablePanelGroup
       direction="horizontal"
       className="min-h-screen rounded-lg border"
     >
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
-        <div className="h-full py-4">
-          <div className="flex h-full flex-col items-start">
-            <Button
-              variant="outline"
-              className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
-              onClick={() => handleTagSelect('all')}
-            >
-              <Notebook size="16px" />
-              All Notes
-            </Button>
-            {/* <Button
+        <div className="h-full py-4 ">
+          <Button
+            variant="outline"
+            className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
+            onClick={() => handleTagSelect('all')}
+          >
+            <Notebook size="16px" />
+            All Notes
+          </Button>
+          {/* <Button
                 variant="outline"
                 className="flex w-full justify-start gap-2 border-none"
                 onClick={() => handleTagSelect('all')}
@@ -200,16 +214,12 @@ export function Notes() {
                 <Trash />
                 Trash
               </Button> */}
-
-            <CreateTag />
-            <ScrollArea className="h-full w-full ">
-              <TagsList
-                selectedTagName={selectedTagName}
-                onTagSelect={handleTagSelect}
-                tags={initialData.tags}
-              />
-            </ScrollArea>
-          </div>
+          <CreateTag />
+          <TagsList
+            selectedTagName={selectedTagName}
+            onTagSelect={handleTagSelect}
+            tags={initialData.tags}
+          />
         </div>
       </ResizablePanel>
       <ResizableHandle />
@@ -220,6 +230,7 @@ export function Notes() {
             <Link
               to="new"
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}
+              data-testid="create-note"
             >
               <Plus size="16px" />
             </Link>

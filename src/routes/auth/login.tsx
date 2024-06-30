@@ -80,9 +80,17 @@ export function Login() {
                   name="email"
                   type="email"
                   placeholder="m@example.com"
+                  aria-invalid={!!emailError}
+                  aria-describedby="emailError"
                 />
                 {emailError && (
-                  <p className="text-xs font-medium text-destructive">
+                  <p
+                    data-testid="emailError"
+                    role="alert"
+                    aria-label={emailError}
+                    id="emailError"
+                    className="text-xs font-medium text-destructive"
+                  >
                     {emailError}
                   </p>
                 )}
@@ -91,14 +99,29 @@ export function Login() {
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
               <div>
-                <PasswordInput name="password" id="password" />
+                <PasswordInput
+                  name="password"
+                  id="password"
+                  aria-invalid={!!passwordError}
+                  aria-describedby="passwordError"
+                />
                 {passwordError && (
-                  <p className="text-xs font-medium text-destructive">
+                  <p
+                    data-testid="passwordError"
+                    role="alert"
+                    aria-label={passwordError}
+                    id="passwordError"
+                    className="text-xs font-medium text-destructive"
+                  >
                     {passwordError}
                   </p>
                 )}
                 {apiError && (
-                  <p className="text-xs font-medium text-destructive">
+                  <p
+                    role="alert"
+                    aria-label={apiError}
+                    className="text-xs font-medium text-destructive"
+                  >
                     {apiError}
                   </p>
                 )}

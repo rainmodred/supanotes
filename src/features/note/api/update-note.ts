@@ -2,20 +2,18 @@ import { supabase } from '@/lib/supabase';
 import { INote } from '@/lib/types';
 
 export async function updateNote({
-  note_id,
+  noteId,
   title,
   body,
-  user_id,
 }: {
-  note_id: string;
+  noteId: string;
   title: string;
   body: string;
-  user_id: string;
 }) {
   const { data, error } = await supabase
     .from('notes')
-    .update({ id: note_id, title, body, user_id })
-    .eq('id', note_id)
+    .update({ id: noteId, title, body })
+    .eq('id', noteId)
     .select()
     .returns<INote[]>();
   if (error) {

@@ -1,9 +1,10 @@
 import { supabase } from '@/lib/supabase';
 
-export async function addTag(note_id: string, tag_id: string) {
+export async function addTag(noteId: string, tagId: string) {
   const { data, error } = await supabase
     .from('notes_tags')
-    .insert({ note_id, tag_id });
+    .insert({ note_id: noteId, tag_id: tagId });
+
   if (error) {
     throw error;
   }

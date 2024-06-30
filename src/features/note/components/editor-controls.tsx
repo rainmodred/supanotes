@@ -7,7 +7,7 @@ interface Props {
   onChangeMode: () => void;
   isLoading: boolean;
 }
-export function Controls({ mode, isLoading, onChangeMode }: Props) {
+export function EditorControls({ mode, isLoading, onChangeMode }: Props) {
   return (
     <>
       <Button
@@ -33,7 +33,8 @@ export function Controls({ mode, isLoading, onChangeMode }: Props) {
         variant="outline"
         size="icon"
         name="intent"
-        value="delete"
+        value="delete-note"
+        data-testid="delete-note"
       >
         <Trash2 size="16" />
       </Button>

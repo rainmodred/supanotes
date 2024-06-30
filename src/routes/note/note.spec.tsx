@@ -46,8 +46,8 @@ describe('NoteRoute', () => {
 
   afterEach(() => {
     drop(db);
-    vi.resetAllMocks();
-    // vi.clearAllMocks();
+    // vi.resetAllMocks();
+    vi.clearAllMocks();
   });
   it('should change title', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -97,6 +97,22 @@ describe('NoteRoute', () => {
     await waitFor(() => expect(spinner).not.toHaveClass('animate-spin'));
 
     expect(textbox).toHaveValue(text);
+  });
+
+  it('should delete note', async () => {
+    const note = createFakeNote();
+    const user = userEvent.setup();
+    renderApp(<Note />, {
+      path: `/notes/:noteId`,
+      url: `/notes/${note.id}`,
+      loader: noteLoader(queryClient),
+      action: noteAction(queryClient),
+    });
+
+    const deleteButton = await screen.findByTestId('delete-note');
+    await user.click(deleteButton);
+
+    expect(screen.queryByText(note.title)).not.toBeInTheDocument();
   });
 
   it('should create, select and unselect tag', async () => {

@@ -2,7 +2,7 @@ import { useFetcher } from 'react-router-dom';
 import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { INote, ITag } from '@/lib/types';
-import { Controls } from './controls';
+import { EditorControls } from './editor-controls';
 import { TagSelector } from './tag-selector';
 import { Title } from './title';
 import { EditorBody } from './editor-body';
@@ -73,7 +73,7 @@ export function Editor({ note }: Props) {
             )}
             <div className="mb-1 flex gap-1">
               <Title initialTile={note?.title ?? ''} onUpdate={handleUpdate} />
-              <Controls
+              <EditorControls
                 mode={mode}
                 onChangeMode={changeMode}
                 isLoading={fetcher.state === 'submitting'}

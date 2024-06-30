@@ -1,9 +1,13 @@
 import { INote } from '@/lib/types';
 
-export function filterNotes(notes: INote[], tagName: string, search: string) {
+export function filterNotes(
+  notes: INote[],
+  tagName: string | null,
+  search: string,
+) {
   search = search.toLowerCase();
   const filteredByTag =
-    tagName === 'all'
+    tagName === null
       ? [...notes]
       : notes?.filter(note => note.tags.some(tag => tag.name === tagName));
 

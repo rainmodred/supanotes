@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/spinner';
 
 interface Props {
-  selectedTagName: string;
+  selectedTagName: string | null;
   onTagSelect: (tagName: string) => void;
   tags: Promise<unknown>;
 }

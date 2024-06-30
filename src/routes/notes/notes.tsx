@@ -145,11 +145,7 @@ interface DeferredLoaderData {
 
 export function Notes() {
   const initialData = useLoaderData() as DeferredLoaderData;
-  const [selectedTagName, setSelectedTagName] = useState('all');
-
-  function handleTagSelect(tagName: string) {
-    setSelectedTagName(tagName);
-  }
+  const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
 
   //TODO: mobile layout
   const ref = useRef<ImperativePanelHandle>(null);
@@ -200,11 +196,11 @@ export function Notes() {
         <div className="h-full py-4 ">
           <Button
             variant="outline"
-            className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
-            onClick={() => handleTagSelect('all')}
+            className={`flex w-full justify-start gap-2 border-none ${selectedTagName === null ? 'bg-slate-200' : ''}`}
+            onClick={() => setSelectedTagName(null)}
           >
-            <Notebook size="16px" />
-            All Notes
+            <Notebook size="16" />
+            Notes
           </Button>
           {/* <Button
                 variant="outline"
@@ -226,7 +222,9 @@ export function Notes() {
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
         <div className="h-full py-4 pb-32">
           <div className="flex items-center justify-between px-4 py-2">
-            <p>Notes</p>
+            <p className="font-semibold">
+              {selectedTagName === null ? 'Notes' : `# ${selectedTagName}`}
+            </p>
             <Link
               to="new"
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}

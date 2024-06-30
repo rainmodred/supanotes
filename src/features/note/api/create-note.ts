@@ -16,5 +16,5 @@ export async function createNote({
   if (error) {
     throw error;
   }
-  return data.at(0)!;
+  return { ...data.at(0)!, tags: [] };
 }

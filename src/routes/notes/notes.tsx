@@ -14,6 +14,8 @@ import { tagsQuery } from '@/features/tags/api/get-tags';
 import { updateTag } from '@/features/tags/api/update-tag';
 import { CreateTag } from '@/features/tags/components/create-tag';
 import { TagsList } from '@/features/tags/components/tags-list';
+import { useAuth } from '@/lib/auth';
+import { queryClient } from '@/lib/react-query';
 import { INote, ITag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { QueryClient } from '@tanstack/react-query';
@@ -147,6 +149,7 @@ interface DeferredLoaderData {
 export function Notes() {
   const initialData = useLoaderData() as DeferredLoaderData;
   const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
+  const { logout } = useAuth();
 
   //TODO: mobile layout
   const ref = useRef<ImperativePanelHandle>(null);
@@ -222,7 +225,14 @@ export function Notes() {
           <div className="flex items-center justify-between p-2">
             {/* <p>test@exampe.com</p> */}
             <ModeToggle />
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                logout();
+                queryClient.clear();
+              }}
+            >
               <LogOut size="16" />
             </Button>
           </div>

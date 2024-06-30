@@ -112,7 +112,15 @@ describe('NoteRoute', () => {
     const deleteButton = await screen.findByTestId('delete-note');
     await user.click(deleteButton);
 
+    await user.click(
+      screen.getByRole('button', {
+        name: /delete/i,
+      }),
+    );
     expect(screen.queryByText(note.title)).not.toBeInTheDocument();
+    expect(
+      db.note.findFirst({ where: { id: { equals: note.id } } }),
+    ).toBeNull();
   });
 
   it('should create, select and unselect tag', async () => {

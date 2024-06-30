@@ -6,6 +6,18 @@ import { EditorControls } from './editor-controls';
 import { TagSelector } from './tag-selector';
 import { Title } from './title';
 import { EditorBody } from './editor-body';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   note: INote;
@@ -18,6 +30,7 @@ export function Editor({ note }: Props) {
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const [mode, setMode] = useState<'read' | 'edit'>('edit');
+  const [open, setOpen] = useState(false);
 
   function changeMode() {
     setMode(mode === 'edit' ? 'read' : 'edit');
@@ -76,6 +89,7 @@ export function Editor({ note }: Props) {
               <EditorControls
                 mode={mode}
                 onChangeMode={changeMode}
+                onDelete={() => setOpen(true)}
                 isLoading={fetcher.state === 'submitting'}
               />
             </div>
@@ -86,6 +100,25 @@ export function Editor({ note }: Props) {
             mode={mode}
             onUpdate={handleUpdate}
           />
+          <AlertDialog open={open} onOpenChange={setOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    const formData = new FormData();
+                    formData.append('intent', 'delete-note');
+                    fetcher.submit(formData, { method: 'post' });
+                  }}
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </fetcher.Form>
       </div>
     </div>

@@ -114,7 +114,7 @@ describe('NoteRoute', () => {
 
     await user.click(
       screen.getByRole('button', {
-        name: /delete/i,
+        name: /confirm/i,
       }),
     );
     expect(screen.queryByText(note.title)).not.toBeInTheDocument();

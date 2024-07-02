@@ -1,5 +1,4 @@
 import {
-  render,
   screen,
   waitFor,
   waitForElementToBeRemoved,
@@ -126,6 +125,12 @@ describe('NotesRoute', () => {
       await user.click(
         screen.getByRole('button', {
           name: /delete/i,
+        }),
+      );
+
+      await user.click(
+        screen.getByRole('button', {
+          name: /confirm/i,
         }),
       );
 

@@ -103,7 +103,10 @@ export function Editor({ note }: Props) {
           <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogTitle>Delete note {note.title}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this note?
+                </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -114,7 +117,7 @@ export function Editor({ note }: Props) {
                     fetcher.submit(formData, { method: 'post' });
                   }}
                 >
-                  Delete
+                  Confirm
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

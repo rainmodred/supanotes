@@ -14,6 +14,16 @@ import { Ellipsis, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useFetcher } from 'react-router-dom';
 import { tagsQuery } from '../api/get-tags';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Props {
   tag: ITag;
@@ -29,6 +39,7 @@ export function EditTag({ tag, hidden }: Props) {
   const formRef = useRef<HTMLFormElement | null>(null);
   const [formError, setFormError] = useState('');
   const [open, setOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
 
   function handleDelete() {
     if (!formRef.current || !session) {
@@ -91,10 +102,27 @@ export function EditTag({ tag, hidden }: Props) {
             variant="outline"
             className="flex w-full justify-start"
             type="button"
-            onClick={handleDelete}
+            onClick={() => setAlertOpen(true)}
           >
             <Trash2 size="16" /> Delete
           </Button>
+
+          <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete tag {tag.name}?</AlertDialogTitle>
+              </AlertDialogHeader>
+              <AlertDialogDescription>
+                Are you sure you want to delete this tag?
+              </AlertDialogDescription>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </fetcher.Form>
       </DropdownMenuContent>
     </DropdownMenu>

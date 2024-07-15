@@ -20,7 +20,6 @@ export const tagsHandlers = [
     await delay();
     try {
       const renamedTag = (await request.json()) as ITag;
-      console.log('renamedTag', renamedTag);
       const addedTag = db.tag.update({
         where: { id: { equals: renamedTag.id } },
         data: { name: renamedTag.name },

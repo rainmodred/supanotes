@@ -38,7 +38,7 @@ export function EditTag({ tag, hidden }: Props) {
 
   const formRef = useRef<HTMLFormElement | null>(null);
   const [formError, setFormError] = useState('');
-  const [open, setOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
 
   function handleDelete() {
@@ -50,7 +50,7 @@ export function EditTag({ tag, hidden }: Props) {
     formData.append('intent', 'delete-tag');
     formData.append('id', tag.id);
 
-    setOpen(false);
+    setAlertOpen(false);
     fetcher.submit(formData, { method: 'delete' });
   }
 
@@ -59,72 +59,75 @@ export function EditTag({ tag, hidden }: Props) {
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button size="icon" variant="ghost" data-testid={`edit-${tag.name}`}>
-          <Ellipsis size="12" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <DropdownMenuLabel>Name</DropdownMenuLabel>
-
-        <fetcher.Form
-          ref={formRef}
-          method="post"
-          onSubmit={e => {
-            e.preventDefault();
-            if (!formRef.current || !session) {
-              return;
-            }
-            const formData = new FormData(formRef.current);
-            formData.append('id', tag.id);
-            formData.append('intent', 'rename-tag');
-
-            const renamedTag = formData.get('name');
-            if (renamedTag) {
-              if (tags?.some(tag => tag.name === renamedTag)) {
-                setFormError('Tag already exists');
-              } else {
-                setFormError('');
-                setOpen(false);
-                fetcher.submit(formData, { method: 'post' });
-              }
-            }
-          }}
-        >
-          <Input className="my-2" name="name" defaultValue={tag.name} />
-          {formError && (
-            <p className="text-xs font-medium text-destructive">{formError}</p>
-          )}
-
-          <Separator className="mb-2" />
-          <Button
-            variant="outline"
-            className="flex w-full justify-start"
-            type="button"
-            onClick={() => setAlertOpen(true)}
-          >
-            <Trash2 size="16" /> Delete
+    <>
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button size="icon" variant="ghost" data-testid={`edit-${tag.name}`}>
+            <Ellipsis size="12" />
           </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuLabel>Name</DropdownMenuLabel>
 
-          <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete tag {tag.name}?</AlertDialogTitle>
-              </AlertDialogHeader>
-              <AlertDialogDescription>
-                Are you sure you want to delete this tag?
-              </AlertDialogDescription>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>
-                  Confirm
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </fetcher.Form>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <fetcher.Form
+            ref={formRef}
+            method="post"
+            onSubmit={e => {
+              e.preventDefault();
+              if (!formRef.current || !session) {
+                return;
+              }
+              const formData = new FormData(formRef.current);
+              formData.append('id', tag.id);
+              formData.append('intent', 'rename-tag');
+
+              const renamedTag = formData.get('name');
+              if (renamedTag) {
+                if (tags?.some(tag => tag.name === renamedTag)) {
+                  setFormError('Tag already exists');
+                } else {
+                  setFormError('');
+                  setDropdownOpen(false);
+                  fetcher.submit(formData, { method: 'post' });
+                }
+              }
+            }}
+          >
+            <Input className="my-2" name="name" defaultValue={tag.name} />
+            {formError && (
+              <p className="text-xs font-medium text-destructive">
+                {formError}
+              </p>
+            )}
+            <Separator className="mb-2" />
+            <Button
+              variant="outline"
+              className="flex w-full justify-start"
+              type="button"
+              onClick={() => setAlertOpen(true)}
+            >
+              <Trash2 size="16" /> Delete
+            </Button>
+          </fetcher.Form>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete tag {tag.name}?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription>
+            Are you sure you want to delete this tag?
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

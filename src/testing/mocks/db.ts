@@ -1,4 +1,4 @@
-import { factory, manyOf, oneOf, primaryKey } from '@mswjs/data';
+import { factory, manyOf, primaryKey } from '@mswjs/data';
 import { faker } from '@faker-js/faker';
 import { ITag } from '@/lib/types';
 
@@ -22,17 +22,6 @@ const models = {
 };
 
 export const db = factory(models);
-
-// const user = db.user.create({
-//   id: '1',
-//   email: 'tom@example.com',
-//   password: '123456',
-// });
-// const tag = db.tag.create({ id: '1', name: 'meow' });
-
-function initDb() {}
-
-initDb();
 
 export function createFakeUser() {
   const user = db.user.create({

@@ -9,10 +9,9 @@ export const notesHandlers = [
     try {
       const url = new URL(request.url);
       const note_id = url.searchParams.get('id')?.slice(3);
+      const note = db.note.findFirst({ where: { id: { equals: note_id } } });
       if (note_id) {
-        return HttpResponse.json([
-          db.note.findFirst({ where: { id: { equals: note_id } } }),
-        ]);
+        return HttpResponse.json([note]);
       }
 
       return HttpResponse.json(db.note.getAll());

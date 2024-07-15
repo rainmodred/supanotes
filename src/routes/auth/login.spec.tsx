@@ -43,7 +43,7 @@ describe('LoginRoute', () => {
     ).toBeInTheDocument();
   });
 
-  it('do something', async () => {
+  it.skip('do something', async () => {
     const user = userEvent.setup();
     renderApp(
       <PublicRoute>

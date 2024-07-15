@@ -64,6 +64,10 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                     fetcher =>
                       fetcher.intent === 'delete-tag' && fetcher.id === tag.id,
                   );
+                  const isRenaming = tagFetchers.some(
+                    fetcher =>
+                      fetcher.intent === 'rename-tag' && fetcher.id === tag.id,
+                  );
                   return (
                     <li
                       key={tag.id}
@@ -95,6 +99,10 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                         TODO: Change tag.id for something better 
                       */}
                       {tag.id === '1' && (
+                        <Spinner size="md" data-testid="loading" />
+                      )}
+
+                      {isRenaming && (
                         <Spinner size="md" data-testid="loading" />
                       )}
 

@@ -21,10 +21,11 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
 
     onUpdate('body', debouncedBody);
   }, [debouncedBody, onUpdate]);
+  console.log('mode', mode, body);
 
   return (
     <>
-      {mode ? (
+      {mode === 'edit' ? (
         <Textarea
           name="body"
           value={body}

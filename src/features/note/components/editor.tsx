@@ -2,10 +2,22 @@ import { useFetcher } from 'react-router-dom';
 import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { INote, ITag } from '@/lib/types';
-import { Controls } from './controls';
+import { EditorControls } from './editor-controls';
 import { TagSelector } from './tag-selector';
 import { Title } from './title';
 import { EditorBody } from './editor-body';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   note: INote;
@@ -18,6 +30,7 @@ export function Editor({ note }: Props) {
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const [mode, setMode] = useState<'read' | 'edit'>('edit');
+  const [open, setOpen] = useState(false);
 
   function changeMode() {
     setMode(mode === 'edit' ? 'read' : 'edit');
@@ -73,9 +86,10 @@ export function Editor({ note }: Props) {
             )}
             <div className="mb-1 flex gap-1">
               <Title initialTile={note?.title ?? ''} onUpdate={handleUpdate} />
-              <Controls
+              <EditorControls
                 mode={mode}
                 onChangeMode={changeMode}
+                onDelete={() => setOpen(true)}
                 isLoading={fetcher.state === 'submitting'}
               />
             </div>
@@ -86,6 +100,28 @@ export function Editor({ note }: Props) {
             mode={mode}
             onUpdate={handleUpdate}
           />
+          <AlertDialog open={open} onOpenChange={setOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete note {note.title}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this note?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    const formData = new FormData();
+                    formData.append('intent', 'delete-note');
+                    fetcher.submit(formData, { method: 'post' });
+                  }}
+                >
+                  Confirm
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </fetcher.Form>
       </div>
     </div>

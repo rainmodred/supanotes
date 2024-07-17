@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Props {
-  selectedTagName: string;
+  selectedTagName: string | null;
   notes: Promise<unknown>;
 }
 

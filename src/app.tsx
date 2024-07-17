@@ -23,6 +23,7 @@ import { NewNote, action as newNoteAction } from './routes/new';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { queryClient } from './lib/react-query';
+import { ThemeProvider } from './components/theme-provider';
 
 function ErrorBoundary() {
   let error = useRouteError();
@@ -87,7 +88,11 @@ const router = createBrowserRouter([
 export function AppProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+          {children}
+        </ThemeProvider>
+      </AuthProvider>
       <ReactQueryDevtools />
     </QueryClientProvider>
   );

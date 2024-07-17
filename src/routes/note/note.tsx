@@ -48,9 +48,6 @@ const schema = z.discriminatedUnion('intent', [
   }),
   z.object({
     intent: z.literal('delete-note'),
-    userId: z.string(),
-    title: z.string(),
-    body: z.string(),
   }),
 ]);
 

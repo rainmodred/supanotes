@@ -1,5 +1,5 @@
 import {
-  render,
+  fireEvent,
   screen,
   waitFor,
   waitForElementToBeRemoved,
@@ -18,15 +18,7 @@ import { supabase } from '@/lib/supabase';
 import { renderApp } from '@/testing/test-utils';
 import { NewNote, action as newNoteAction } from '../new';
 
-class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-
 describe('NotesRoute', () => {
-  window.ResizeObserver = ResizeObserver;
-
   beforeEach(() => {
     const user = createFakeUser();
     vi.spyOn(supabase.auth, 'getSession').mockResolvedValue({
@@ -53,11 +45,16 @@ describe('NotesRoute', () => {
   afterEach(() => {
     drop(db);
     vi.clearAllMocks();
+    // vi.resetAllMocks();
+  });
+
+  afterAll(() => {
+    drop(db);
   });
 
   describe('Tags', () => {
-    const TAGS_COUNT = 2;
     it('should render tags', async () => {
+      const TAGS_COUNT = 2;
       for (let i = 0; i < TAGS_COUNT; i++) {
         createFakeTag();
       }
@@ -107,38 +104,10 @@ describe('NotesRoute', () => {
       // screen.debug(undefined, Infinity);
     });
 
-    it('should delete tag', async () => {
-      createFakeTag();
-      const tagName = 'movies';
-      createFakeTag('movies');
-
-      const user = userEvent.setup();
-      renderApp(<Notes />, {
-        path: '/notes',
-        url: '/notes',
-        loader: notesLoader(queryClient),
-        action: notesAction(queryClient),
-      });
-
-      const delItem = await screen.findByText(tagName);
-      const dropdown = screen.getByTestId(`edit-${tagName}`);
-      await user.click(dropdown);
-      await user.click(
-        screen.getByRole('button', {
-          name: /delete/i,
-        }),
-      );
-
-      await waitForElementToBeRemoved(delItem);
-
-      await waitFor(() =>
-        expect(screen.getAllByRole('listitem')).toHaveLength(1),
-      );
-    });
-
     it('should rename tag', async () => {
       const tag = createFakeTag();
-      const user = userEvent.setup();
+      const user = userEvent.setup({ skipHover: true });
+
       renderApp(<Notes />, {
         path: '/notes',
         url: '/notes',
@@ -146,17 +115,50 @@ describe('NotesRoute', () => {
         action: notesAction(queryClient),
       });
 
-      const dropdown = await screen.findByTestId(`edit-${tag?.name}`);
-      await user.click(dropdown);
-      const input = screen.getByDisplayValue(tag?.name);
+      const dropdown = await screen.findByTestId(`edit-${tag.name}`);
 
+      // await user.click(dropdown);
+
+      fireEvent.pointerDown(
+        dropdown,
+        new PointerEvent('pointerdown', { ctrlKey: false, button: 0 }),
+      );
+      const input = await screen.findByDisplayValue(tag.name);
+
+      const renamedTag = 'movies';
       await user.clear(input);
-      await user.type(input, 'movies{enter}');
+      await user.type(input, `${renamedTag}{enter}`);
 
-      expect(await screen.findByText('movies')).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.queryByTestId(/loading/i)).not.toBeInTheDocument(),
+      );
+
+      expect(await screen.findByText(renamedTag)).toBeInTheDocument();
     });
 
-    it('should show error', async () => {
+    it.skip('rename meow', async () => {
+      window.PointerEvent = MouseEvent as typeof PointerEvent;
+
+      const user = userEvent.setup({ skipHover: true });
+      renderApp(<Notes />, {
+        path: '/notes',
+        url: '/notes',
+        loader: notesLoader(queryClient),
+        action: notesAction(queryClient),
+      });
+
+      const button = await screen.findByTestId('meow');
+      // await user.click(button);
+      // fireEvent.click(button);
+      fireEvent.pointerDown(
+        button,
+        new PointerEvent('pointerdown', { ctrlKey: false, button: 0 }),
+      );
+
+      expect(screen.getByText(/content/i)).toBeInTheDocument();
+    });
+
+    it('should show error if tag already exists', async () => {
       const tag = createFakeTag();
       const tag1 = createFakeTag();
       const user = userEvent.setup();
@@ -168,13 +170,64 @@ describe('NotesRoute', () => {
       });
 
       const dropdown = await screen.findByTestId(`edit-${tag?.name}`);
-      await user.click(dropdown);
+      fireEvent.pointerDown(
+        dropdown,
+        new PointerEvent('pointerdown', { ctrlKey: false, button: 0 }),
+      );
       const input = screen.getByDisplayValue(tag?.name);
 
       await user.clear(input);
       await user.type(input, `${tag1.name}{enter}`);
 
       expect(screen.getByText(/tag already exists/i)).toBeInTheDocument();
+    });
+    it('should delete tag', async () => {
+      createFakeTag();
+      const tagName = 'movies';
+      createFakeTag(tagName);
+
+      const user = userEvent.setup();
+      renderApp(<Notes />, {
+        path: '/notes',
+        url: '/notes',
+        loader: notesLoader(queryClient),
+        action: notesAction(queryClient),
+      });
+
+      const delItem = await screen.findByText(tagName);
+      const dropdown = screen.getByTestId(`edit-${tagName}`);
+      fireEvent.pointerDown(
+        dropdown,
+        new PointerEvent('pointerdown', { ctrlKey: false, button: 0 }),
+      );
+      // await user.click(dropdown);
+      // await user.click(
+      //   screen.getByRole('button', {
+      //     name: /delete/i,
+      //   }),
+      // );
+
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /delete/i,
+        }),
+      );
+
+      fireEvent.click(
+        screen.getByRole('button', {
+          name: /confirm/i,
+        }),
+      );
+      // await user.click(
+      //   screen.getByRole('button', {
+      //     name: /confirm/i,
+      //   }),
+      // );
+
+      await waitForElementToBeRemoved(delItem, { timeout: 5000 });
+      await waitFor(() =>
+        expect(screen.getAllByRole('listitem')).toHaveLength(1),
+      );
     });
     it.skip('action example', async () => {
       const formData = new FormData();

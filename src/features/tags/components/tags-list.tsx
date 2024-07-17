@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/spinner';
 
 interface Props {
-  selectedTagName: string;
+  selectedTagName: string | null;
   onTagSelect: (tagName: string) => void;
   tags: Promise<unknown>;
 }
@@ -64,13 +64,17 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                     fetcher =>
                       fetcher.intent === 'delete-tag' && fetcher.id === tag.id,
                   );
+                  const isRenaming = tagFetchers.some(
+                    fetcher =>
+                      fetcher.intent === 'rename-tag' && fetcher.id === tag.id,
+                  );
                   return (
                     <li
                       key={tag.id}
                       className={cn(
                         `mt-0 flex w-full items-center justify-between gap-2 px-2 pr-1`,
                         {
-                          'bg-slate-200': selectedTagName === tag.name,
+                          'bg-accent': selectedTagName === tag.name,
                           'opacity-30': isDeleting,
                         },
                       )}
@@ -95,6 +99,10 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                         TODO: Change tag.id for something better 
                       */}
                       {tag.id === '1' && (
+                        <Spinner size="md" data-testid="loading" />
+                      )}
+
+                      {isRenaming && (
                         <Spinner size="md" data-testid="loading" />
                       )}
 

@@ -1,3 +1,4 @@
+import { ModeToggle } from '@/components/mode-toggle';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   ResizablePanelGroup,
@@ -13,10 +14,12 @@ import { tagsQuery } from '@/features/tags/api/get-tags';
 import { updateTag } from '@/features/tags/api/update-tag';
 import { CreateTag } from '@/features/tags/components/create-tag';
 import { TagsList } from '@/features/tags/components/tags-list';
+import { useAuth } from '@/lib/auth';
+import { queryClient } from '@/lib/react-query';
 import { INote, ITag } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { QueryClient } from '@tanstack/react-query';
-import { Notebook, Plus } from 'lucide-react';
+import { LogOut, Notebook, Plus } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import {
@@ -145,11 +148,8 @@ interface DeferredLoaderData {
 
 export function Notes() {
   const initialData = useLoaderData() as DeferredLoaderData;
-  const [selectedTagName, setSelectedTagName] = useState('all');
-
-  function handleTagSelect(tagName: string) {
-    setSelectedTagName(tagName);
-  }
+  const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
+  const { logout } = useAuth();
 
   //TODO: mobile layout
   const ref = useRef<ImperativePanelHandle>(null);
@@ -197,14 +197,16 @@ export function Notes() {
       className="min-h-screen rounded-lg border"
     >
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
-        <div className="h-full py-4 ">
+        <div className="flex h-full flex-col py-4">
           <Button
             variant="outline"
-            className={`flex w-full justify-start gap-2 border-none ${selectedTagName === 'all' ? 'bg-slate-200' : ''}`}
-            onClick={() => handleTagSelect('all')}
+            className={cn('flex w-full justify-start gap-2 border-none', {
+              'bg-accent': selectedTagName,
+            })}
+            onClick={() => setSelectedTagName(null)}
           >
-            <Notebook size="16px" />
-            All Notes
+            <Notebook size="16" />
+            Notes
           </Button>
           {/* <Button
                 variant="outline"
@@ -217,16 +219,32 @@ export function Notes() {
           <CreateTag />
           <TagsList
             selectedTagName={selectedTagName}
-            onTagSelect={handleTagSelect}
+            onTagSelect={setSelectedTagName}
             tags={initialData.tags}
           />
+          <div className="flex items-center justify-between p-2">
+            {/* <p>test@exampe.com</p> */}
+            <ModeToggle />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                logout();
+                queryClient.clear();
+              }}
+            >
+              <LogOut size="16" />
+            </Button>
+          </div>
         </div>
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
-        <div className="h-full py-4 pb-32">
+        <div className="flex h-full flex-col py-4">
           <div className="flex items-center justify-between px-4 py-2">
-            <p>Notes</p>
+            <p className="font-semibold">
+              {selectedTagName === null ? 'Notes' : `# ${selectedTagName}`}
+            </p>
             <Link
               to="new"
               className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}

@@ -7,7 +7,7 @@ import { buttonVariants } from '@/components/ui/button';
 
 interface Props {
   notes: INote[];
-  tagName: string;
+  tagName: string | null;
   search: string;
 }
 

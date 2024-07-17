@@ -1,3 +1,14 @@
+import {
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Eye, Pencil, RefreshCw, Trash2 } from 'lucide-react';
@@ -5,9 +16,15 @@ import { Eye, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 interface Props {
   mode: 'edit' | 'read';
   onChangeMode: () => void;
+  onDelete: () => void;
   isLoading: boolean;
 }
-export function Controls({ mode, isLoading, onChangeMode }: Props) {
+export function EditorControls({
+  mode,
+  isLoading,
+  onDelete,
+  onChangeMode,
+}: Props) {
   return (
     <>
       <Button
@@ -29,11 +46,13 @@ export function Controls({ mode, isLoading, onChangeMode }: Props) {
         />
       </div>
       <Button
-        type="submit"
+        type="button"
         variant="outline"
         size="icon"
         name="intent"
-        value="delete"
+        value="delete-note"
+        data-testid="delete-note"
+        onClick={onDelete}
       >
         <Trash2 size="16" />
       </Button>

@@ -56,7 +56,7 @@ export function Register() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="email@example.com"
                 />
                 {emailError && (
                   <p className="text-xs font-medium text-destructive">

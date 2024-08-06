@@ -10,7 +10,7 @@ export async function createNote({
 }) {
   const { data, error } = await supabase
     .from('notes')
-    .insert([{ title, user_id: userId }])
+    .insert({ title, user_id: userId })
     .select()
     .returns<INote[]>();
   if (error) {

@@ -48,7 +48,7 @@ export const notesHandlers = [
       const note = (await request.json()) as INote;
       const addedNote = createFakeNote({
         title: note.title,
-        body: note.body,
+        body: ' ',
       });
       return HttpResponse.json([addedNote]);
     } catch (error: any) {

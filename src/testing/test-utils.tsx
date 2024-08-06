@@ -1,4 +1,4 @@
-import { AppProvider } from '@/app';
+import { AppProvider } from '@/app-provider';
 import { render } from '@testing-library/react';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 

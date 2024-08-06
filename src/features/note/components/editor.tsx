@@ -114,6 +114,7 @@ export function Editor({ note }: Props) {
                   onClick={() => {
                     const formData = new FormData();
                     formData.append('intent', 'delete-note');
+                    formData.append('userId', session?.user.id);
                     fetcher.submit(formData, { method: 'post' });
                   }}
                 >

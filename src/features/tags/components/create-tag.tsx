@@ -4,15 +4,25 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { useFetcher } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useActionData, useFetcher, useLocation } from 'react-router-dom';
 import { tagsQuery } from '../api/get-tags';
+import { action as notesAction } from '@/routes/notes/notes';
 
 export function CreateTag() {
   const fetcher = useFetcher();
   const formRef = useRef<HTMLFormElement | null>(null);
   const tagInputRef = useRef<HTMLInputElement | null>(null);
   const [formError, setFormError] = useState('');
+  const location = useLocation();
+
+  useEffect(() => {
+    if (fetcher?.data?.error) {
+      setFormError(fetcher?.data?.error);
+    } else {
+      setFormError('');
+    }
+  }, [fetcher.data]);
 
   const { data: tags } = useQuery({ ...tagsQuery });
 
@@ -28,23 +38,32 @@ export function CreateTag() {
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!formRef.current || !session) {
+    if (!formRef.current) {
       return;
     }
 
-    const formData = new FormData(formRef.current);
-    const newTag = formData.get('name');
-    formData.append('intent', 'create-tag');
-    formData.append('userId', session.user.id);
+    // if (!location.pathname.startsWith('/demo')) {
+    //   return;
+    // }
 
-    if (newTag) {
-      if (tags?.some(tag => tag.name === newTag)) {
-        setFormError('Tag already exists');
-      } else {
-        setFormError('');
-        fetcher.submit(formData, { method: 'post' });
-      }
+    const formData = new FormData(formRef.current);
+    formData.append('intent', 'create-tag');
+
+    if (session) {
+      formData.append('userId', session?.user.id);
+    } else {
+      formData.append('userId', '');
     }
+
+    // if (newTag) {
+    //   if (tags?.some(tag => tag.name === newTag)) {
+    //     setFormError('Tag already exists');
+    //   } else {
+    //     setFormError('');
+    //     fetcher.submit(formData, { method: 'post' });
+    //   }
+    // }
+    fetcher.submit(formData, { method: 'post' });
     handleResetTag();
   }
 

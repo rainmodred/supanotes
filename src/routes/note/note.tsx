@@ -48,6 +48,7 @@ const schema = z.discriminatedUnion('intent', [
   }),
   z.object({
     intent: z.literal('delete-note'),
+    userId: z.string(),
   }),
 ]);
 
@@ -82,6 +83,7 @@ export const action =
       return { ok: true };
     }
     if (payload.intent === 'delete-note') {
+      console.log('payload', payload);
       await deleteNote(noteId);
 
       queryClient.removeQueries({
@@ -91,6 +93,12 @@ export const action =
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData =>
         oldData?.filter(note => note.id !== noteId),
       );
+
+      //demo userId
+      if (payload.userId === 'b5018bc7-5a21-40f4-8866-b4dc0a9a7eae') {
+        return redirect('/demo');
+      }
+
       return redirect(`/notes`);
     }
 

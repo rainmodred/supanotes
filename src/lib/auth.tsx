@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { supabase } from './supabase';
 import { Session } from '@supabase/supabase-js';
 
@@ -24,6 +30,8 @@ interface AuthContextType {
   session: Session | null;
   setSession: (value: Session) => void;
   logout: () => void;
+  demoLogout: () => void;
+  isDemo: boolean;
 }
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -48,12 +56,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  async function logout() {
+  const logout = useCallback(async () => {
     await supabase.auth.signOut();
-  }
+  }, []);
+
+  const demoLogout = useCallback(async () => {
+    if (session?.user.email === 'demo@example.com') {
+      await supabase.auth.signOut();
+    }
+  }, [session?.user.email]);
+
+  const isDemo = session?.user.email === 'demo@example.com';
 
   return (
-    <AuthContext.Provider value={{ session, setSession, logout }}>
+    <AuthContext.Provider
+      value={{ session, setSession, logout, demoLogout, isDemo }}
+    >
       {children}
     </AuthContext.Provider>
   );

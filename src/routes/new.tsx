@@ -22,7 +22,8 @@ export const action =
         return [...oldData, { ...note }];
       }
     });
-    return redirect(`/notes/${note.id}`);
+    const url = new URL(request.url).pathname.split('/')[1];
+    return redirect(`/${url}/${note.id}`);
   };
 
 export function NewNote() {

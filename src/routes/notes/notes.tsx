@@ -31,7 +31,7 @@ import {
 } from 'react-router-dom';
 import { z } from 'zod';
 
-const schema = z.discriminatedUnion('intent', [
+export const schema = z.discriminatedUnion('intent', [
   z.object({
     intent: z.literal('rename-tag'),
     id: z.string(),
@@ -54,7 +54,6 @@ export const action =
     const formData = await request.formData();
     const updates = Object.fromEntries(formData);
     const payload = schema.parse(updates);
-    console.log('note action', payload);
 
     if (payload.intent === 'rename-tag') {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
@@ -92,13 +91,17 @@ export const action =
     }
 
     if (payload.intent === 'create-tag') {
+      const oldTags = queryClient.getQueryData<ITag[]>(tagsQuery.queryKey);
+      if (oldTags?.some(tag => tag.name === payload.name)) {
+        return { ok: false, error: 'Tag already exists' };
+      }
+
+      const createdTag = await createTag(payload.name, payload.userId);
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
-          return [...oldData, { name: payload.name, id: payload.name }];
+          return [...oldData, { id: createdTag.id, name: payload.name }];
         }
       });
-
-      await createTag(payload.name, payload.userId);
       return { ok: true };
     }
 
@@ -149,7 +152,7 @@ interface DeferredLoaderData {
 export function Notes() {
   const initialData = useLoaderData() as DeferredLoaderData;
   const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
-  const { logout } = useAuth();
+  const { logout, isDemo } = useAuth();
 
   //TODO: mobile layout
   const ref = useRef<ImperativePanelHandle>(null);
@@ -225,16 +228,27 @@ export function Notes() {
           <div className="flex items-center justify-between p-2">
             {/* <p>test@exampe.com</p> */}
             <ModeToggle />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                logout();
-                queryClient.clear();
-              }}
-            >
-              <LogOut size="16" />
-            </Button>
+            {isDemo ? (
+              <Button
+                onClick={() => {
+                  logout();
+                  queryClient.clear();
+                }}
+              >
+                Login
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  logout();
+                  queryClient.clear();
+                }}
+              >
+                <LogOut size="16" />
+              </Button>
+            )}
           </div>
         </div>
       </ResizablePanel>

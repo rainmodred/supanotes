@@ -79,7 +79,7 @@ export function Login() {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="email@example.com"
                   aria-invalid={!!emailError}
                   aria-describedby="emailError"
                 />

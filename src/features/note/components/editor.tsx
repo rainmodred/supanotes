@@ -2,9 +2,7 @@ import { useFetcher } from 'react-router-dom';
 import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { INote, ITag } from '@/lib/types';
-import { EditorControls } from './editor-controls';
 import { TagSelector } from './tag-selector';
-import { Title } from './title';
 import { EditorBody } from './editor-body';
 import {
   AlertDialog,
@@ -15,9 +13,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { EditorControls } from './editor-controls';
 
 interface Props {
   note: INote;
@@ -38,18 +35,13 @@ export function Editor({ note }: Props) {
 
   const { submit } = fetcher;
   const handleUpdate = useCallback(
-    (field: 'title' | 'body', value: string) => {
+    (value: string) => {
       if (!formRef.current) {
         return;
       }
       const formData = new FormData(formRef.current);
-      if (field === 'title') {
-        formData.append('title', value);
-      }
-      if (field === 'body') {
-        formData.append('body', value);
-      }
 
+      formData.append('body', value);
       formData.append('intent', 'update-note');
       submit(formData, { method: 'post' });
     },
@@ -77,53 +69,50 @@ export function Editor({ note }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="h-full ">
-        <fetcher.Form method="post" className="h-full" ref={formRef}>
-          <div className="flex flex-col">
-            {session && (
-              <input name="userId" value={session?.user.id} type="hidden" />
-            )}
-            <div className="mb-1 flex gap-1">
-              <Title initialTile={note?.title ?? ''} onUpdate={handleUpdate} />
-              <EditorControls
-                mode={mode}
-                onChangeMode={changeMode}
-                onDelete={() => setOpen(true)}
-                isLoading={fetcher.state === 'submitting'}
-              />
-            </div>
-            <TagSelector tags={note.tags} onTagChange={handleTag} />
-          </div>
-          <EditorBody
-            initialBody={note?.body ?? ''}
+    <fetcher.Form method="post" className="h-full" ref={formRef}>
+      {session && (
+        <input name="userId" value={session?.user.id} type="hidden" />
+      )}
+
+      <div className="flex h-full flex-col">
+        <div className="flex gap-1">
+          <TagSelector tags={note.tags} onTagChange={handleTag} />
+          <EditorControls
             mode={mode}
-            onUpdate={handleUpdate}
+            onChangeMode={changeMode}
+            onDelete={() => setOpen(true)}
+            isLoading={fetcher.state === 'submitting'}
           />
-          <AlertDialog open={open} onOpenChange={setOpen}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete note {note.title}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this note?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    const formData = new FormData();
-                    formData.append('intent', 'delete-note');
-                    fetcher.submit(formData, { method: 'post' });
-                  }}
-                >
-                  Confirm
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </fetcher.Form>
+        </div>
+        <EditorBody
+          initialBody={note?.body ?? ''}
+          mode={mode}
+          onUpdate={handleUpdate}
+        />
       </div>
-    </div>
+
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete note {note.title}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this note?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const formData = new FormData();
+                formData.append('intent', 'delete-note');
+                fetcher.submit(formData, { method: 'post' });
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </fetcher.Form>
   );
 }

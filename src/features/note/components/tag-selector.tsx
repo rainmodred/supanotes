@@ -28,39 +28,41 @@ export function TagSelector({ tags, onTagChange }: Props) {
   const [value, setValue] = useState<Option[]>(transformTags(tags));
 
   return (
-    <MultipleSelector
-      value={value}
-      options={
-        allTags?.map(({ id, name }) => {
-          return {
-            id,
-            label: name,
-            value: name,
-          };
-        }) ?? []
-      }
-      onChange={setValue}
-      onCreate={async ({ value }) => {
-        onTagChange({ intent: 'create-tag', tag: { name: value } });
-      }}
-      onSelect={option => {
-        if (typeof option.id === 'string') {
-          onTagChange({
-            intent: 'select-tag',
-            tag: { id: option.id, name: option.value },
-          });
+    <div className="flex-grow">
+      <MultipleSelector
+        value={value}
+        options={
+          allTags?.map(({ id, name }) => {
+            return {
+              id,
+              label: name,
+              value: name,
+            };
+          }) ?? []
         }
-      }}
-      onUnselect={option => {
-        if (typeof option.id === 'string') {
-          onTagChange({
-            intent: 'unselect-tag',
-            tag: { id: option.id, name: option.value },
-          });
-        }
-      }}
-      placeholder="Tags..."
-      creatable
-    />
+        onChange={setValue}
+        onCreate={async ({ value }) => {
+          onTagChange({ intent: 'create-tag', tag: { name: value } });
+        }}
+        onSelect={option => {
+          if (typeof option.id === 'string') {
+            onTagChange({
+              intent: 'select-tag',
+              tag: { id: option.id, name: option.value },
+            });
+          }
+        }}
+        onUnselect={option => {
+          if (typeof option.id === 'string') {
+            onTagChange({
+              intent: 'unselect-tag',
+              tag: { id: option.id, name: option.value },
+            });
+          }
+        }}
+        placeholder="Tags..."
+        creatable
+      />
+    </div>
   );
 }

@@ -262,7 +262,7 @@ export function Notes() {
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={60} collapsible ref={editorPanel}>
-        <div className="h-full p-4">
+        <div className="h-full py-4">
           <Outlet />
         </div>
       </ResizablePanel>

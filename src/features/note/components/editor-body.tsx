@@ -42,7 +42,7 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
           className="h-full"
         />
       ) : (
-        <Markdown className="p-4">{body}</Markdown>
+        <Markdown className="prose p-4">{body}</Markdown>
       )}
     </div>
   );

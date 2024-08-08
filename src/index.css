@@ -61,7 +61,7 @@
     @apply h-full;
   }
 
-  h1 {
+  /* h1 {
     @apply scroll-m-20 text-4xl font-semibold tracking-tight lg:text-5xl;
   }
 
@@ -87,7 +87,7 @@
 
   code {
     @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
-  }
+  } */
 }
 
 #root {

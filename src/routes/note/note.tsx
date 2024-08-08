@@ -43,7 +43,7 @@ const schema = z.discriminatedUnion('intent', [
   z.object({
     intent: z.literal('update-note'),
     userId: z.string(),
-    title: z.string(),
+    // title: z.string(),
     body: z.string(),
   }),
   z.object({
@@ -56,6 +56,7 @@ export const action =
   async ({ request, params }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const updates = Object.fromEntries(formData);
+
     const payload = schema.parse(updates);
 
     if (!params.noteId) {

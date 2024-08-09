@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { EditorControls } from './editor-controls';
+import { Title } from './title';
 
 interface Props {
   note: INote;
@@ -35,14 +36,20 @@ export function Editor({ note }: Props) {
 
   const { submit } = fetcher;
   const handleUpdate = useCallback(
-    (value: string) => {
+    (field: 'title' | 'body', value: string) => {
       if (!formRef.current) {
         return;
       }
       const formData = new FormData(formRef.current);
+      if (field === 'title') {
+        formData.append('title', value);
+        formData.append('intent', 'update-title');
+      }
+      if (field === 'body') {
+        formData.append('body', value);
+        formData.append('intent', 'update-body');
+      }
 
-      formData.append('body', value);
-      formData.append('intent', 'update-note');
       submit(formData, { method: 'post' });
     },
     [submit],
@@ -75,14 +82,18 @@ export function Editor({ note }: Props) {
       )}
 
       <div className="flex h-full flex-col">
-        <div className="flex gap-1">
+        <div className="px-2">
+          <div className="mb-2 flex gap-2">
+            <Title initialTile={note.title} onUpdate={handleUpdate} />
+            <EditorControls
+              mode={mode}
+              onChangeMode={changeMode}
+              onDelete={() => setOpen(true)}
+              isLoading={fetcher.state === 'submitting'}
+            />
+          </div>
+
           <TagSelector tags={note.tags} onTagChange={handleTag} />
-          <EditorControls
-            mode={mode}
-            onChangeMode={changeMode}
-            onDelete={() => setOpen(true)}
-            isLoading={fetcher.state === 'submitting'}
-          />
         </div>
         <EditorBody
           initialBody={note?.body ?? ''}

@@ -7,8 +7,8 @@ export async function updateNote({
   body,
 }: {
   noteId: string;
-  title: string;
-  body: string;
+  title?: string;
+  body?: string;
 }) {
   const { data, error } = await supabase
     .from('notes')

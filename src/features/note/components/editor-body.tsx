@@ -8,7 +8,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 interface Props {
   initialBody: string;
   mode: 'edit' | 'read';
-  onUpdate: (value: string) => void;
+  onUpdate: (field: 'body', value: string) => void;
 }
 
 export function EditorBody({ initialBody, mode, onUpdate }: Props) {
@@ -26,7 +26,7 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
       return;
     }
 
-    onUpdate(debouncedBody);
+    onUpdate('body', debouncedBody);
   }, [debouncedBody, onUpdate]);
   console.log('mode', mode, body);
 
@@ -40,10 +40,11 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
           extensions={[markdown({ base: markdownLanguage })]}
           onChange={onChange}
           theme={'none'}
-          className="h-full"
+          className="prose h-full dark:prose-invert"
+          data-testid="codemirror"
         />
       ) : (
-        <Markdown className="prose p-4">{body}</Markdown>
+        <Markdown className="prose p-4 dark:prose-invert">{body}</Markdown>
       )}
     </div>
   );

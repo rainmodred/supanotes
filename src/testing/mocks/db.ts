@@ -18,6 +18,8 @@ const models = {
     //rename to userId?
     user_id: String,
     tags: manyOf('tag'),
+    created_at: Date,
+    updated_at: Date,
   },
 };
 
@@ -46,5 +48,7 @@ export function createFakeNote({
     title: title ? title : faker.word.words(2),
     body: body ? body : faker.lorem.lines(),
     tags: tags ? [...tags] : [],
+    created_at: faker.date.recent(),
+    updated_at: faker.date.recent(),
   });
 }

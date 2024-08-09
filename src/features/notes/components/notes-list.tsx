@@ -34,13 +34,11 @@ export function NotesList({ selectedTagName, notes }: Props) {
         <Await resolve={notes}>
           {notes => {
             return (
-              <ScrollArea className="h-full">
-                <FilteredNotes
-                  notes={notes}
-                  tagName={selectedTagName}
-                  search={search}
-                />
-              </ScrollArea>
+              <FilteredNotes
+                notes={notes}
+                tagName={selectedTagName}
+                search={search}
+              />
             );
           }}
         </Await>

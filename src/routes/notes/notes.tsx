@@ -54,7 +54,6 @@ export const action =
     const formData = await request.formData();
     const updates = Object.fromEntries(formData);
     const payload = schema.parse(updates);
-    console.log('note action', payload);
 
     if (payload.intent === 'rename-tag') {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {

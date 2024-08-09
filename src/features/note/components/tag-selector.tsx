@@ -28,7 +28,7 @@ export function TagSelector({ tags, onTagChange }: Props) {
   const [value, setValue] = useState<Option[]>(transformTags(tags));
 
   return (
-    <div className="flex-grow">
+    <div>
       <MultipleSelector
         value={value}
         options={

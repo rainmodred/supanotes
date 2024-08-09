@@ -197,7 +197,7 @@ export function Notes() {
       className="min-h-screen rounded-lg border"
     >
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
-        <div className="flex h-full flex-col py-4">
+        <div className="flex h-full flex-col py-2">
           <Button
             variant="outline"
             className={cn('flex w-full justify-start gap-2 border-none', {
@@ -240,7 +240,7 @@ export function Notes() {
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={20} collapsible ref={ref}>
-        <div className="flex h-full flex-col py-4">
+        <div className="flex h-full flex-col py-2">
           <div className="flex items-center justify-between px-4 py-2">
             <p className="font-semibold">
               {selectedTagName === null ? 'Notes' : `# ${selectedTagName}`}
@@ -262,7 +262,7 @@ export function Notes() {
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel defaultSize={60} collapsible ref={editorPanel}>
-        <div className="h-full py-4">
+        <div className="h-full py-2">
           <Outlet />
         </div>
       </ResizablePanel>

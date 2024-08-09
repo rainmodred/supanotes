@@ -7,21 +7,8 @@ import {
   useRouteError,
 } from 'react-router-dom';
 import { Root } from './routes/root';
-import { Login, action as loginAction } from './routes/auth/login';
-import { Register, action as registerAction } from './routes/auth/register';
 import { PublicRoute } from './components/public-route';
-import {
-  Notes,
-  loader as notesLoader,
-  action as notesAction,
-} from './routes/notes/notes';
-import {
-  Note,
-  action as noteAction,
-  loader as noteLoader,
-} from './routes/note/note';
 import { ProtectedRoute } from './components/protected-route';
-import { NewNote, action as newNoteAction } from './routes/new';
 import { queryClient } from './lib/react-query';
 import { AppProvider } from './app-provider';
 
@@ -54,13 +41,17 @@ enableMocking().then(() => {
 
         {
           path: '/login',
-          element: <Login />,
-          action: loginAction,
+          lazy: async () => {
+            const { Login, action } = await import('./routes/auth/login');
+            return { Component: Login, action };
+          },
         },
         {
           path: '/register',
-          element: <Register />,
-          action: registerAction,
+          lazy: async () => {
+            const { Register, action } = await import('./routes/auth/register');
+            return { Component: Register, action };
+          },
         },
       ],
     },
@@ -69,21 +60,37 @@ enableMocking().then(() => {
       children: [
         {
           path: '/notes',
-          element: <Notes />,
-          loader: notesLoader(queryClient),
-          action: notesAction(queryClient),
+          lazy: async () => {
+            const { Notes, action, loader } = await import(
+              './routes/notes/notes'
+            );
+            return {
+              Component: Notes,
+              action: action(queryClient),
+              loader: loader(queryClient),
+            };
+          },
           // shouldRevalidate: () => false,
           children: [
             {
               path: 'new',
-              element: <NewNote />,
-              action: newNoteAction(queryClient),
+              lazy: async () => {
+                const { NewNote, action } = await import('./routes/new');
+                return { Component: NewNote, action: action(queryClient) };
+              },
             },
             {
               path: ':noteId',
-              element: <Note />,
-              action: noteAction(queryClient),
-              loader: noteLoader(queryClient),
+              lazy: async () => {
+                const { Note, action, loader } = await import(
+                  './routes/note/note'
+                );
+                return {
+                  Component: Note,
+                  action: action(queryClient),
+                  loader: loader(queryClient),
+                };
+              },
               errorElement: <ErrorBoundary />,
             },
           ],

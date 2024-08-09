@@ -8,9 +8,9 @@ import {
   Link,
   useActionData,
 } from 'react-router-dom';
-import { LoginActionData, LoginSchema } from './login';
 import { signUpNewUser, useAuth } from '@/lib/auth';
 import { PasswordInput } from '@/components/ui/password-input';
+import { ActionData, LoginSchema } from './schema';
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
@@ -32,7 +32,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export function Register() {
-  const data = useActionData() as LoginActionData;
+  const data = useActionData() as ActionData;
   const emailError = data?.error?.fieldErrors?.email?.at(0);
   const passwordError = data?.error?.fieldErrors?.password?.at(0);
   const apiError = data?.error?.message;

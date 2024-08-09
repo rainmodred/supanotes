@@ -9,15 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { z } from 'zod';
 import { signInWithEmail, useAuth } from '@/lib/auth';
-import { Session, User } from '@supabase/supabase-js';
 import { PasswordInput } from '@/components/ui/password-input';
-
-export const LoginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+import { ActionData, LoginSchema } from './schema';
 
 export async function action({ request }: ActionFunctionArgs) {
   const formData = await request.formData();
@@ -38,23 +32,8 @@ export async function action({ request }: ActionFunctionArgs) {
   return { success: true, data, error };
 }
 
-export interface LoginActionData {
-  success: boolean;
-  data: {
-    session: Omit<Session, 'user'>;
-    user: User;
-  };
-  error: z.typeToFlattenedError<
-    {
-      email: string;
-      password: string;
-    },
-    string
-  >;
-}
-
 export function Login() {
-  const data = useActionData() as LoginActionData;
+  const data = useActionData() as ActionData;
   const emailError = data?.error?.fieldErrors?.email?.at(0);
   const passwordError = data?.error?.fieldErrors?.password?.at(0);
   const apiError = data?.error?.message;

@@ -3,7 +3,6 @@ import { Suspense, useState } from 'react';
 import { Await } from 'react-router-dom';
 import { FilteredNotes } from './filtered-notes';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Props {
   selectedTagName: string | null;

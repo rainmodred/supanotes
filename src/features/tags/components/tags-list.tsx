@@ -47,7 +47,6 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
     >
       <Await resolve={tags}>
         {tags => {
-          // console.log('tags:', tags);
           return (
             <ScrollArea className="h-full w-full ">
               <ul className="m-0">

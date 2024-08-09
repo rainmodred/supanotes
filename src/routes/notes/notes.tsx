@@ -91,13 +91,14 @@ export const action =
     }
 
     if (payload.intent === 'create-tag') {
+      const returnedTag = await createTag(payload.name, payload.userId);
+
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
-          return [...oldData, { name: payload.name, id: payload.name }];
+          return [...oldData, returnedTag];
         }
+        return [returnedTag];
       });
-
-      await createTag(payload.name, payload.userId);
       return { ok: true };
     }
 

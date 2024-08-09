@@ -260,9 +260,10 @@ describe('NotesRoute', () => {
       );
 
       for (const note of notes) {
+        const re = new RegExp(`${note.title}`);
         expect(
           screen.getByRole('link', {
-            name: `${note.title}`,
+            name: re,
           }),
         ).toHaveAttribute('href', `/notes/${note.id}`);
       }

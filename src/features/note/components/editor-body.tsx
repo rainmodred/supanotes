@@ -39,7 +39,7 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
           extensions={[markdown({ base: markdownLanguage })]}
           onChange={onChange}
           theme={'none'}
-          className="prose h-full dark:prose-invert"
+          className="prose h-full max-w-full dark:prose-invert"
           data-testid="codemirror"
         />
       ) : (

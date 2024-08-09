@@ -1,9 +1,8 @@
 import { useMemo } from 'react';
 import { filterNotes } from '../api/filter-notes';
 import { INote } from '@/lib/types';
-import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { buttonVariants } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { NotePreview } from './note-preview';
 
 interface Props {
   notes: INote[];
@@ -16,18 +15,12 @@ export function FilteredNotes({ notes, tagName, search }: Props) {
     () => filterNotes(notes, tagName, search),
     [notes, tagName, search],
   );
-  return filteredNotes.map(note => {
-    return (
-      <Link
-        key={note.id}
-        to={note.id.toString()}
-        className={cn(
-          buttonVariants({ variant: 'outline' }),
-          'flex w-full justify-start gap-2 border-none',
-        )}
-      >
-        {note.title}
-      </Link>
-    );
-  });
+
+  return (
+    <ScrollArea className="py-30 my-30 flex-grow">
+      {filteredNotes.map(note => {
+        return <NotePreview note={note} key={note.id} />;
+      })}
+    </ScrollArea>
+  );
 }

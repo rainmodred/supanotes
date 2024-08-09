@@ -41,9 +41,13 @@ const schema = z.discriminatedUnion('intent', [
     userId: z.string(),
   }),
   z.object({
-    intent: z.literal('update-note'),
+    intent: z.literal('update-title'),
     userId: z.string(),
-    // title: z.string(),
+    title: z.string(),
+  }),
+  z.object({
+    intent: z.literal('update-body'),
+    userId: z.string(),
     body: z.string(),
   }),
   z.object({
@@ -56,7 +60,6 @@ export const action =
   async ({ request, params }: ActionFunctionArgs) => {
     const formData = await request.formData();
     const updates = Object.fromEntries(formData);
-
     const payload = schema.parse(updates);
 
     if (!params.noteId) {
@@ -65,12 +68,11 @@ export const action =
 
     const noteId = params.noteId;
     const { queryKey: noteQueryKey } = noteQuery(noteId, queryClient);
-    if (payload.intent === 'update-note') {
-      const returnedNote = await updateNote({
-        title: payload.title,
-        body: payload.body,
-        noteId,
-      });
+    if (payload.intent === 'update-title' || payload.intent === 'update-body') {
+      const returnedNote =
+        payload.intent === 'update-title'
+          ? await updateNote({ noteId, title: payload.title })
+          : await updateNote({ noteId, body: payload.body });
       queryClient.setQueryData<INote>(noteQueryKey, oldData => {
         if (oldData) {
           return {
@@ -80,8 +82,21 @@ export const action =
           };
         }
       });
+      queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
+        if (oldData) {
+          return oldData.map(note => {
+            if (note.id === noteId) {
+              return {
+                ...returnedNote,
+              };
+            }
+            return note;
+          });
+        }
+      });
       return { ok: true };
     }
+
     if (payload.intent === 'delete-note') {
       await deleteNote(noteId);
 

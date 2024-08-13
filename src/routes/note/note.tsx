@@ -73,7 +73,9 @@ export const action =
         payload.intent === 'update-title'
           ? await updateNote({ noteId, title: payload.title })
           : await updateNote({ noteId, body: payload.body });
+
       queryClient.setQueryData<INote>(noteQueryKey, oldData => {
+        console.log('oldData:', oldData);
         if (oldData) {
           return {
             ...oldData,
@@ -86,7 +88,9 @@ export const action =
         if (oldData) {
           return oldData.map(note => {
             if (note.id === noteId) {
+              //...note or add tags to updateNote select()
               return {
+                ...note,
                 ...returnedNote,
               };
             }

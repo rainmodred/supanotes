@@ -6,7 +6,7 @@ interface Props {
   initialTile: string;
   onUpdate: (field: 'title', value: string) => void;
 }
-export function Title({ initialTile, onUpdate }: Props) {
+export function TitleInput({ initialTile, onUpdate }: Props) {
   const [title, setTitle] = useState(initialTile);
   const debouncedTitle = useDebounce(title, 500);
   const isTitleChanged = useRef(false);

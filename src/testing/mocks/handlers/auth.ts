@@ -72,4 +72,11 @@ export const authHandlers = [
       );
     }
   }),
+
+  http.post(
+    `https://kbqkdhwlfjfuwkryuuho.supabase.co/auth/v1/signup`,
+    async ({ request }) => {
+      const credentials = await request.json();
+    },
+  ),
 ];

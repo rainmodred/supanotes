@@ -75,12 +75,10 @@ export const action =
           : await updateNote({ noteId, body: payload.body });
 
       queryClient.setQueryData<INote>(noteQueryKey, oldData => {
-        console.log('oldData:', oldData);
         if (oldData) {
           return {
             ...oldData,
-            created_at: returnedNote.created_at,
-            updated_at: returnedNote.updated_at,
+            ...returnedNote,
           };
         }
       });

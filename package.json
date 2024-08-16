@@ -9,7 +9,8 @@
     "check": "tsc",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "test:e2e": "cross-env VITE_MSW=enabled npx playwright test"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.2.5",
@@ -43,6 +44,7 @@
   "devDependencies": {
     "@faker-js/faker": "^8.4.1",
     "@mswjs/data": "^0.16.1",
+    "@playwright/test": "^1.45.1",
     "@tailwindcss/typography": "^0.5.14",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^16.0.0",
@@ -54,6 +56,7 @@
     "@typescript-eslint/parser": "^7.0.2",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.18",
+    "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
     "eslint-plugin-jest-dom": "^5.4.0",
     "eslint-plugin-react-hooks": "^4.6.0",
@@ -68,5 +71,10 @@
     "typescript": "^5.2.2",
     "vite": "^5.1.4",
     "vitest": "^1.6.0"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

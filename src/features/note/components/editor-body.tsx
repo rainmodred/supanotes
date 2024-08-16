@@ -28,7 +28,6 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
 
     onUpdate('body', debouncedBody);
   }, [debouncedBody, onUpdate]);
-  console.log('mode', mode, body);
 
   return (
     <div className="flex-grow overflow-auto">

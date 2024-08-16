@@ -19,17 +19,13 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
   const fetchers = useFetchers();
   const tagFetchers = fetchers
     .filter(fetcher => {
-      const intent = fetcher.formData?.get('intent');
+      // const intent = fetcher.formData?.get('intent');
 
-      return (
-        (fetcher.formAction?.startsWith('/notes') && intent === 'create-tag') ||
-        intent === 'delete-tag' ||
-        intent === 'rename-tag'
-      );
+      return fetcher.formAction?.startsWith('/notes');
     })
     .map(({ formData }) => {
       return {
-        id: formData?.get('id') || '1',
+        id: formData?.get('id'),
         name: formData?.get('name'),
         intent: formData?.get('intent'),
       };
@@ -53,11 +49,11 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                 {[
                   ...tags,
                   // Optimistic create tag
-                  ...tagFetchers.filter(
-                    fetcher =>
-                      fetcher.intent !== 'rename-tag' &&
-                      fetcher.intent !== 'delete-tag',
-                  ),
+                  // ...tagFetchers.filter(
+                  //   fetcher =>
+                  //     fetcher.intent !== 'rename-tag' &&
+                  //     fetcher.intent !== 'delete-tag',
+                  // ),
                 ].map(tag => {
                   const isDeleting = tagFetchers.some(
                     fetcher =>

@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { EditorControls } from './editor-controls';
-import { Title } from './title';
+import { TitleInput } from './title-input';
 
 interface Props {
   note: INote;
@@ -84,7 +84,7 @@ export function Editor({ note }: Props) {
       <div className="flex h-full flex-col">
         <div className="px-2">
           <div className="mb-2 flex gap-2">
-            <Title initialTile={note.title} onUpdate={handleUpdate} />
+            <TitleInput initialTile={note.title} onUpdate={handleUpdate} />
             <EditorControls
               mode={mode}
               onChangeMode={changeMode}

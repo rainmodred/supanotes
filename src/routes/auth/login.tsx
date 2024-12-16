@@ -1,9 +1,4 @@
-import {
-  ActionFunctionArgs,
-  Form,
-  Link,
-  useActionData,
-} from 'react-router-dom';
+import { ActionFunctionArgs, Form, Link, useActionData } from 'react-router';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,7 +63,7 @@ export function Login() {
                     role="alert"
                     aria-label={emailError}
                     id="emailError"
-                    className="text-xs font-medium text-destructive"
+                    className="text-destructive text-xs font-medium"
                   >
                     {emailError}
                   </p>
@@ -90,7 +85,7 @@ export function Login() {
                     role="alert"
                     aria-label={passwordError}
                     id="passwordError"
-                    className="text-xs font-medium text-destructive"
+                    className="text-destructive text-xs font-medium"
                   >
                     {passwordError}
                   </p>
@@ -99,7 +94,7 @@ export function Login() {
                   <p
                     role="alert"
                     aria-label={apiError}
-                    className="text-xs font-medium text-destructive"
+                    className="text-destructive text-xs font-medium"
                   >
                     {apiError}
                   </p>

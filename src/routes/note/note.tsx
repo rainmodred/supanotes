@@ -4,11 +4,9 @@ import {
   ActionFunctionArgs,
   Await,
   LoaderFunctionArgs,
-  defer,
-  json,
   redirect,
   useLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 import { INote, ITag } from '@/lib/types';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { noteQuery } from '@/features/note/api/get-note';
@@ -178,14 +176,14 @@ export const action =
       return { ok: true };
     }
 
-    throw json({ message: 'Invalid intent' }, { status: 400 });
+    throw Response.json({ message: 'Invalid intent' }, { status: 400 });
   };
 
 export const loader =
   (queryClient: QueryClient) =>
   async ({ params }: LoaderFunctionArgs) => {
     const query = noteQuery(params.noteId!, queryClient);
-    return defer({ note: queryClient.fetchQuery({ ...query }) });
+    return { note: queryClient.fetchQuery({ ...query }) };
   };
 
 interface DeferredLoaderData {

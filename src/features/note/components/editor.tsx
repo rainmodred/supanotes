@@ -1,4 +1,4 @@
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { INote, ITag } from '@/lib/types';

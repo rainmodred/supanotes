@@ -22,13 +22,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { LogOut, Notebook, Plus } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { ImperativePanelHandle } from 'react-resizable-panels';
-import {
-  ActionFunctionArgs,
-  Link,
-  Outlet,
-  defer,
-  useLoaderData,
-} from 'react-router-dom';
+import { ActionFunctionArgs, Link, Outlet, useLoaderData } from 'react-router';
 import { z } from 'zod';
 
 const schema = z.discriminatedUnion('intent', [
@@ -135,10 +129,10 @@ export const action =
   };
 
 export const loader = (queryClient: QueryClient) => async () => {
-  return defer({
+  return {
     notes: queryClient.fetchQuery({ ...notesQuery }),
     tags: queryClient.fetchQuery({ ...tagsQuery }),
-  });
+  };
 };
 
 interface DeferredLoaderData {

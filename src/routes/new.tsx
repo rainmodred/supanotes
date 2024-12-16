@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, Form, redirect } from 'react-router-dom';
+import { ActionFunctionArgs, Form, redirect } from 'react-router';
 import { QueryClient } from '@tanstack/react-query';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { createNote } from '@/features/note/api/create-note';

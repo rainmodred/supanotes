@@ -1,6 +1,6 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Suspense, useState } from 'react';
-import { Await } from 'react-router-dom';
+import { Await } from 'react-router';
 import { FilteredNotes } from './filtered-notes';
 import { Input } from '@/components/ui/input';
 

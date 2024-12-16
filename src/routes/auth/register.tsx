@@ -2,12 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  ActionFunctionArgs,
-  Form,
-  Link,
-  useActionData,
-} from 'react-router-dom';
+import { ActionFunctionArgs, Form, Link, useActionData } from 'react-router';
 import { signUpNewUser, useAuth } from '@/lib/auth';
 import { PasswordInput } from '@/components/ui/password-input';
 import { ActionData, LoginSchema } from './schema';
@@ -59,7 +54,7 @@ export function Register() {
                   placeholder="email@example.com"
                 />
                 {emailError && (
-                  <p className="text-xs font-medium text-destructive">
+                  <p className="text-destructive text-xs font-medium">
                     {emailError}
                   </p>
                 )}
@@ -70,12 +65,12 @@ export function Register() {
               <div>
                 <PasswordInput name="password" id="password" />
                 {passwordError && (
-                  <p className="text-xs font-medium text-destructive">
+                  <p className="text-destructive text-xs font-medium">
                     {passwordError}
                   </p>
                 )}
                 {apiError && (
-                  <p className="text-xs font-medium text-destructive">
+                  <p className="text-destructive text-xs font-medium">
                     {apiError}
                   </p>
                 )}

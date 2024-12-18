@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 import { tagsQuery } from '../api/get-tags';
 
 export function CreateTag() {
@@ -79,7 +79,7 @@ export function CreateTag() {
             />
             <div className="px-2 py-2">
               {formError && (
-                <p className="text-xs font-medium text-destructive">
+                <p className="text-destructive text-xs font-medium">
                   {formError}
                 </p>
               )}

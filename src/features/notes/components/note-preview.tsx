@@ -1,6 +1,6 @@
 import { INote } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 import { format } from 'date-fns';
 
 export function NotePreview({ note }: { note: INote }) {

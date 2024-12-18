@@ -8,7 +8,10 @@ import {
 import { renderApp } from '@/testing/test-utils';
 import { drop } from '@mswjs/data';
 import userEvent from '@testing-library/user-event';
-import { Note, loader as noteLoader, action as noteAction } from './note';
+import Note, {
+  clientLoader as noteLoader,
+  clientAction as noteAction,
+} from './note';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { queryClient } from '@/lib/react-query';
 import { faker } from '@faker-js/faker';

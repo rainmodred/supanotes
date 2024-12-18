@@ -8,26 +8,28 @@ import { signInWithEmail, useAuth } from '@/lib/auth';
 import { PasswordInput } from '@/components/ui/password-input';
 import { ActionData, LoginSchema } from './schema';
 
-export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const email = formData.get('email');
-  const password = formData.get('password');
-  const result = LoginSchema.safeParse({ email, password });
-  if (!result.success) {
-    return { success: false, error: result.error.flatten() };
-  }
+export const clientAction =
+  () =>
+  async ({ request }: ActionFunctionArgs) => {
+    const formData = await request.formData();
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const result = LoginSchema.safeParse({ email, password });
+    if (!result.success) {
+      return { success: false, error: result.error.flatten() };
+    }
 
-  const { data, error } = await signInWithEmail(
-    result.data.email,
-    result.data.password,
-  );
-  if (error) {
-    return { success: false, error };
-  }
-  return { success: true, data, error };
-}
+    const { data, error } = await signInWithEmail(
+      result.data.email,
+      result.data.password,
+    );
+    if (error) {
+      return { success: false, error };
+    }
+    return { success: true, data, error };
+  };
 
-export function Login() {
+export default function Login() {
   const data = useActionData() as ActionData;
   const emailError = data?.error?.fieldErrors?.email?.at(0);
   const passwordError = data?.error?.fieldErrors?.password?.at(0);
@@ -63,7 +65,7 @@ export function Login() {
                     role="alert"
                     aria-label={emailError}
                     id="emailError"
-                    className="text-destructive text-xs font-medium"
+                    className="text-xs font-medium text-destructive"
                   >
                     {emailError}
                   </p>
@@ -85,7 +87,7 @@ export function Login() {
                     role="alert"
                     aria-label={passwordError}
                     id="passwordError"
-                    className="text-destructive text-xs font-medium"
+                    className="text-xs font-medium text-destructive"
                   >
                     {passwordError}
                   </p>
@@ -94,7 +96,7 @@ export function Login() {
                   <p
                     role="alert"
                     aria-label={apiError}
-                    className="text-destructive text-xs font-medium"
+                    className="text-xs font-medium text-destructive"
                   >
                     {apiError}
                   </p>

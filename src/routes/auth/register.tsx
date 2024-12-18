@@ -7,26 +7,28 @@ import { signUpNewUser, useAuth } from '@/lib/auth';
 import { PasswordInput } from '@/components/ui/password-input';
 import { ActionData, LoginSchema } from './schema';
 
-export async function action({ request }: ActionFunctionArgs) {
-  const formData = await request.formData();
-  const email = formData.get('email');
-  const password = formData.get('password');
-  const result = LoginSchema.safeParse({ email, password });
-  if (!result.success) {
-    return { success: false, error: result.error.flatten() };
-  }
+export const clientAction =
+  () =>
+  async ({ request }: ActionFunctionArgs) => {
+    const formData = await request.formData();
+    const email = formData.get('email');
+    const password = formData.get('password');
+    const result = LoginSchema.safeParse({ email, password });
+    if (!result.success) {
+      return { success: false, error: result.error.flatten() };
+    }
 
-  const { data, error } = await signUpNewUser(
-    result?.data?.email,
-    result?.data?.password,
-  );
-  if (error) {
-    return { success: false, error };
-  }
-  return { success: true, data, error };
-}
+    const { data, error } = await signUpNewUser(
+      result?.data?.email,
+      result?.data?.password,
+    );
+    if (error) {
+      return { success: false, error };
+    }
+    return { success: true, data, error };
+  };
 
-export function Register() {
+export default function Register() {
   const data = useActionData() as ActionData;
   const emailError = data?.error?.fieldErrors?.email?.at(0);
   const passwordError = data?.error?.fieldErrors?.password?.at(0);
@@ -54,7 +56,7 @@ export function Register() {
                   placeholder="email@example.com"
                 />
                 {emailError && (
-                  <p className="text-destructive text-xs font-medium">
+                  <p className="text-xs font-medium text-destructive">
                     {emailError}
                   </p>
                 )}
@@ -65,12 +67,12 @@ export function Register() {
               <div>
                 <PasswordInput name="password" id="password" />
                 {passwordError && (
-                  <p className="text-destructive text-xs font-medium">
+                  <p className="text-xs font-medium text-destructive">
                     {passwordError}
                   </p>
                 )}
                 {apiError && (
-                  <p className="text-destructive text-xs font-medium">
+                  <p className="text-xs font-medium text-destructive">
                     {apiError}
                   </p>
                 )}

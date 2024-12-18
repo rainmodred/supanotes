@@ -53,7 +53,7 @@ const schema = z.discriminatedUnion('intent', [
   }),
 ]);
 
-export const action =
+export const clientAction =
   (queryClient: QueryClient) =>
   async ({ request, params }: ActionFunctionArgs) => {
     const formData = await request.formData();
@@ -73,7 +73,6 @@ export const action =
           : await updateNote({ noteId, body: payload.body });
 
       queryClient.setQueryData<INote>(noteQueryKey, oldData => {
-        console.log('oldData:', oldData);
         if (oldData) {
           return {
             ...oldData,
@@ -179,7 +178,7 @@ export const action =
     throw Response.json({ message: 'Invalid intent' }, { status: 400 });
   };
 
-export const loader =
+export const clientLoader =
   (queryClient: QueryClient) =>
   async ({ params }: LoaderFunctionArgs) => {
     const query = noteQuery(params.noteId!, queryClient);
@@ -190,7 +189,7 @@ interface DeferredLoaderData {
   note: Promise<INote>;
 }
 
-export function Note() {
+export default function Note() {
   const initialData = useLoaderData() as DeferredLoaderData;
 
   return (

@@ -28,7 +28,6 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
 
     onUpdate('body', debouncedBody);
   }, [debouncedBody, onUpdate]);
-  console.log('mode', mode, body);
 
   return (
     <div className="flex-grow overflow-auto">
@@ -40,11 +39,11 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
           extensions={[markdown({ base: markdownLanguage })]}
           onChange={onChange}
           theme={'none'}
-          className="prose h-full max-w-full dark:prose-invert"
+          className="prose dark:prose-invert h-full max-w-full"
           data-testid="codemirror"
         />
       ) : (
-        <Markdown className="prose p-4 dark:prose-invert">{body}</Markdown>
+        <Markdown className="prose dark:prose-invert p-4">{body}</Markdown>
       )}
     </div>
   );

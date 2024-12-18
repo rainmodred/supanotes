@@ -42,7 +42,7 @@ const schema = z.discriminatedUnion('intent', [
     userId: z.string(),
   }),
 ]);
-export const action =
+export const clientAction =
   (queryClient: QueryClient) =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
@@ -128,7 +128,7 @@ export const action =
     throw new Error('Invalid intent');
   };
 
-export const loader = (queryClient: QueryClient) => async () => {
+export const clientLoader = (queryClient: QueryClient) => async () => {
   return {
     notes: queryClient.fetchQuery({ ...notesQuery }),
     tags: queryClient.fetchQuery({ ...tagsQuery }),
@@ -140,7 +140,7 @@ interface DeferredLoaderData {
   tags: Promise<ITag[]>;
 }
 
-export function Notes() {
+export default function Notes() {
   const initialData = useLoaderData() as DeferredLoaderData;
   const [selectedTagName, setSelectedTagName] = useState<string | null>(null);
   const { logout } = useAuth();

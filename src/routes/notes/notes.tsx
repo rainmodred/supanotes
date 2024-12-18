@@ -190,7 +190,7 @@ export default function Notes() {
       direction="horizontal"
       className="min-h-screen rounded-lg border"
     >
-      <ResizablePanel defaultSize={20} collapsible ref={ref}>
+      <ResizablePanel defaultSize={15} collapsible ref={ref}>
         <div className="flex h-full flex-col py-2">
           <Button
             variant="outline"
@@ -233,7 +233,7 @@ export default function Notes() {
         </div>
       </ResizablePanel>
       <ResizableHandle />
-      <ResizablePanel defaultSize={20} collapsible ref={ref}>
+      <ResizablePanel defaultSize={25} collapsible ref={ref}>
         <div className="flex h-full flex-col py-2">
           <div className="flex items-center justify-between px-4 py-2">
             <p className="font-semibold">

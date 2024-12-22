@@ -1,13 +1,15 @@
 import { INote } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { NavLink } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 import { format } from 'date-fns';
 
 export function NotePreview({ note }: { note: INote }) {
   const truncatedBody = note.body.split('\n').slice(0, 2);
+  const { search } = useLocation();
+
   return (
     <NavLink
-      to={note.id}
+      to={`${note.id}${search}`}
       className={({ isActive }) =>
         cn('block py-2 hover:bg-accent hover:text-accent-foreground', {
           'bg-accent': isActive,

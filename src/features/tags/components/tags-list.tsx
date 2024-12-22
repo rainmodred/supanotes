@@ -1,21 +1,22 @@
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { Hash } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Suspense } from 'react';
-import { Await, useFetchers } from 'react-router';
+import { Await, Link, useFetchers, useSearchParams } from 'react-router';
 import { cn } from '@/lib/utils';
 import { EditTag } from './edit-tag';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/spinner';
 
 interface Props {
-  selectedTagName: string | null;
-  onTagSelect: (tagName: string) => void;
   tags: Promise<unknown>;
+  onSelect?: () => void;
 }
 
-export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
+export function TagsList({ tags, onSelect }: Props) {
   //WTF
+  const [searchParams] = useSearchParams();
+
   const fetchers = useFetchers();
   const tagFetchers = fetchers
     .filter(fetcher => {
@@ -48,7 +49,7 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
       <Await resolve={tags}>
         {tags => {
           return (
-            <ScrollArea className="h-full w-full ">
+            <ScrollArea className="h-full w-full">
               <ul className="m-0">
                 {[
                   ...tags,
@@ -71,24 +72,26 @@ export function TagsList({ selectedTagName, onTagSelect, tags }: Props) {
                     <li
                       key={tag.id}
                       className={cn(
-                        `mt-0 flex w-full items-center justify-between gap-2 px-2 pr-1`,
+                        `mt-0 flex w-full items-center justify-between gap-2 px-4 pr-1`,
                         {
-                          'bg-accent': selectedTagName === tag.name,
+                          'bg-accent': searchParams.get('filter') === tag.name,
                           'opacity-30': isDeleting,
                         },
                       )}
                     >
-                      <Button
-                        variant="ghost"
-                        className={`hover:none flex w-full grow justify-start gap-2 border-none bg-inherit px-0
-                    py-0`}
-                        onClick={() => onTagSelect(tag.name)}
+                      <Link
+                        onClick={onSelect}
+                        to={`?filter=${tag.name}`}
+                        className={cn(
+                          buttonVariants({ variant: 'ghost' }),
+                          `hover:none flex w-full grow justify-start gap-2 border-none bg-inherit px-0 py-0`,
+                        )}
                       >
                         <Hash size="16px" className="shrink-0" />
                         <span className="overflow-hidden text-ellipsis">
                           {tag.name}
                         </span>
-                      </Button>
+                      </Link>
 
                       {/* Not working, action works but loader is not called */}
                       {/* {!isDeleting && <EditTag tag={tag} />} */}

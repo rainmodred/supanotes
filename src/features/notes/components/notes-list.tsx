@@ -3,13 +3,13 @@ import { Suspense, useState } from 'react';
 import { Await } from 'react-router';
 import { FilteredNotes } from './filtered-notes';
 import { Input } from '@/components/ui/input';
+import { INote } from '@/lib/types';
 
 interface Props {
-  selectedTagName: string | null;
-  notes: Promise<unknown>;
+  notes: Promise<INote[]>;
 }
 
-export function NotesList({ selectedTagName, notes }: Props) {
+export function NotesList({ notes }: Props) {
   const [search, setSearch] = useState('');
   return (
     <>
@@ -32,13 +32,7 @@ export function NotesList({ selectedTagName, notes }: Props) {
       >
         <Await resolve={notes}>
           {notes => {
-            return (
-              <FilteredNotes
-                notes={notes}
-                tagName={selectedTagName}
-                search={search}
-              />
-            );
+            return <FilteredNotes notes={notes} search={search} />;
           }}
         </Await>
       </Suspense>

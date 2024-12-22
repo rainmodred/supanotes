@@ -3,17 +3,20 @@ import { filterNotes } from '../api/filter-notes';
 import { INote } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NotePreview } from './note-preview';
+import { useSearchParams } from 'react-router';
 
 interface Props {
   notes: INote[];
-  tagName: string | null;
   search: string;
 }
 
-export function FilteredNotes({ notes, tagName, search }: Props) {
+export function FilteredNotes({ notes, search }: Props) {
+  const [searchParams] = useSearchParams();
+  const filter = searchParams.get('filter');
+
   const filteredNotes = useMemo(
-    () => filterNotes(notes, tagName, search),
-    [notes, tagName, search],
+    () => filterNotes(notes, filter, search),
+    [notes, filter, search],
   );
 
   return (

@@ -1,4 +1,4 @@
-import { useFetcher } from 'react-router-dom';
+import { Link, useFetcher } from 'react-router';
 import { useCallback, useRef, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { INote, ITag } from '@/lib/types';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { EditorControls } from './editor-controls';
 import { Title } from './title';
+import { ChevronLeft } from 'lucide-react';
 
 interface Props {
   note: INote;
@@ -83,7 +84,10 @@ export function Editor({ note }: Props) {
 
       <div className="flex h-full flex-col">
         <div className="px-2">
-          <div className="mb-2 flex gap-2">
+          <div className="mb-2 flex items-center gap-2">
+            <Link to="/notes">
+              <ChevronLeft />
+            </Link>
             <Title initialTile={note.title} onUpdate={handleUpdate} />
             <EditorControls
               mode={mode}

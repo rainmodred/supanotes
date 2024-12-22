@@ -7,7 +7,7 @@ export function filterNotes(
 ) {
   search = search.toLowerCase();
   const filteredByTag =
-    tagName === null
+    tagName === null || tagName === '*'
       ? [...notes]
       : notes?.filter(note => note.tags.some(tag => tag.name === tagName));
 

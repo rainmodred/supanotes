@@ -1,9 +1,9 @@
 import { describe } from 'node:test';
-import { Login, action } from './login';
+import Login, { action } from './login';
 import { renderApp } from '../../testing/test-utils';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { PublicRoute } from '../../components/public-route';
+import PublicRoute from '../../components/public-route';
 
 describe('LoginRoute', () => {
   it.skip('should validate fields', async () => {

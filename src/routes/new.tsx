@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, Form, redirect } from 'react-router-dom';
+import { ActionFunctionArgs, Form, redirect } from 'react-router';
 import { QueryClient } from '@tanstack/react-query';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { createNote } from '@/features/note/api/create-note';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 const scheme = z.object({ title: z.string(), userId: z.string() });
-export const action =
+export const clientAction =
   (queryClient: QueryClient) =>
   async ({ request }: ActionFunctionArgs) => {
     const formData = await request.formData();
@@ -25,7 +25,7 @@ export const action =
     return redirect(`/notes/${note.id}`);
   };
 
-export function NewNote() {
+export default function NewNote() {
   const { session } = useAuth();
   return (
     <div className="flex h-full flex-col">

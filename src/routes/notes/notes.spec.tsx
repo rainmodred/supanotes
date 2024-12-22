@@ -5,7 +5,10 @@ import {
   waitForElementToBeRemoved,
 } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Notes, loader as notesLoader, action as notesAction } from './notes';
+import Notes, {
+  clientLoader as notesLoader,
+  clientAction as notesAction,
+} from './notes';
 import { drop } from '@mswjs/data';
 import { queryClient } from '@/lib/react-query';
 import {
@@ -16,7 +19,7 @@ import {
 } from '@/testing/mocks/db';
 import { supabase } from '@/lib/supabase';
 import { renderApp } from '@/testing/test-utils';
-import { NewNote, action as newNoteAction } from '../new';
+import NewNote, { clientAction as newNoteAction } from '../new';
 
 describe('NotesRoute', () => {
   beforeEach(() => {
@@ -236,7 +239,7 @@ describe('NotesRoute', () => {
         method: 'POST',
         body: formData,
       });
-      const action = notesAction(queryClient);
+      const clientAction = notesAction(queryClient);
       const response = await action({ request, params: {}, context: {} });
     });
   });
@@ -260,9 +263,10 @@ describe('NotesRoute', () => {
       );
 
       for (const note of notes) {
+        const re = new RegExp(`${note.title}`);
         expect(
           screen.getByRole('link', {
-            name: `${note.title}`,
+            name: re,
           }),
         ).toHaveAttribute('href', `/notes/${note.id}`);
       }

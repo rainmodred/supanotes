@@ -12,7 +12,7 @@ import { ITag } from '@/lib/types';
 import { useQuery } from '@tanstack/react-query';
 import { Ellipsis, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { useFetcher } from 'react-router-dom';
+import { useFetcher } from 'react-router';
 import { tagsQuery } from '../api/get-tags';
 import {
   AlertDialog,
@@ -95,7 +95,7 @@ export function EditTag({ tag, hidden }: Props) {
           >
             <Input className="my-2" name="name" defaultValue={tag.name} />
             {formError && (
-              <p className="text-xs font-medium text-destructive">
+              <p className="text-destructive text-xs font-medium">
                 {formError}
               </p>
             )}

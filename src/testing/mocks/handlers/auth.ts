@@ -8,7 +8,7 @@ export const authHandlers = [
 
     try {
       const credentials = await request.json();
-      console.log('credentials:', credentials);
+      // console.log('credentials:', credentials);
 
       if (
         credentials?.email === 'test@example.com' &&

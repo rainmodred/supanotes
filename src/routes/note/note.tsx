@@ -4,11 +4,9 @@ import {
   ActionFunctionArgs,
   Await,
   LoaderFunctionArgs,
-  defer,
-  json,
   redirect,
   useLoaderData,
-} from 'react-router-dom';
+} from 'react-router';
 import { INote, ITag } from '@/lib/types';
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { noteQuery } from '@/features/note/api/get-note';
@@ -55,7 +53,7 @@ const schema = z.discriminatedUnion('intent', [
   }),
 ]);
 
-export const action =
+export const clientAction =
   (queryClient: QueryClient) =>
   async ({ request, params }: ActionFunctionArgs) => {
     const formData = await request.formData();
@@ -73,9 +71,7 @@ export const action =
         payload.intent === 'update-title'
           ? await updateNote({ noteId, title: payload.title })
           : await updateNote({ noteId, body: payload.body });
-
       queryClient.setQueryData<INote>(noteQueryKey, oldData => {
-        console.log('oldData:', oldData);
         if (oldData) {
           return {
             ...oldData,
@@ -178,21 +174,21 @@ export const action =
       return { ok: true };
     }
 
-    throw json({ message: 'Invalid intent' }, { status: 400 });
+    throw Response.json({ message: 'Invalid intent' }, { status: 400 });
   };
 
-export const loader =
+export const clientLoader =
   (queryClient: QueryClient) =>
   async ({ params }: LoaderFunctionArgs) => {
     const query = noteQuery(params.noteId!, queryClient);
-    return defer({ note: queryClient.fetchQuery({ ...query }) });
+    return { note: queryClient.fetchQuery({ ...query }) };
   };
 
 interface DeferredLoaderData {
   note: Promise<INote>;
 }
 
-export function Note() {
+export default function Note() {
   const initialData = useLoaderData() as DeferredLoaderData;
 
   return (

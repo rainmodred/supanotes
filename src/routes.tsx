@@ -72,4 +72,8 @@ export const routes: RouteObject[] = [
       },
     ],
   },
+  {
+    path: '*',
+    lazy: () => import('./routes/not-found').then(convert(queryClient)),
+  },
 ];

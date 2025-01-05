@@ -118,9 +118,19 @@ export const clientAction =
     throw new Error('Invalid intent');
   };
 
+async function getNotes(queryClient: QueryClient) {
+  const notes = await queryClient.fetchQuery({ ...notesQuery });
+
+  for (const note of notes) {
+    queryClient.setQueryData(['notes', note.id], note);
+  }
+
+  return notes;
+}
+
 export const clientLoader = (queryClient: QueryClient) => async () => {
   return {
-    notes: queryClient.fetchQuery({ ...notesQuery }),
+    notes: getNotes(queryClient),
     tags: queryClient.fetchQuery({ ...tagsQuery }),
   };
 };

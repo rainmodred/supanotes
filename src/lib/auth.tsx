@@ -21,7 +21,8 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 interface AuthContextType {
-  session: Session | null;
+  session: Session | null | undefined;
+  isLoading: boolean;
   setSession: (value: Session) => void;
   logout: () => void;
 }
@@ -33,9 +34,12 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    setIsLoading(true);
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoading(false);
       setSession(session);
     });
 
@@ -53,7 +57,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, setSession, logout }}>
+    <AuthContext.Provider value={{ session, isLoading, setSession, logout }}>
       {children}
     </AuthContext.Provider>
   );

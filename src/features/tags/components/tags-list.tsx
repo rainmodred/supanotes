@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils';
 import { EditTag } from './edit-tag';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/spinner';
+import { ITag } from '@/lib/types';
 
 interface Props {
-  tags: Promise<unknown>;
+  tags: Promise<ITag[]>;
   onSelect?: () => void;
 }
 
@@ -37,15 +38,7 @@ export function TagsList({ tags, onSelect }: Props) {
     });
 
   return (
-    <Suspense
-      fallback={
-        <div className="px-2" data-testid="loading-tags">
-          {Array.from({ length: 20 }).map((_, i) => {
-            return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
-          })}
-        </div>
-      }
-    >
+    <Suspense fallback={<TagListSkeleton />}>
       <Await resolve={tags}>
         {tags => {
           return (
@@ -118,5 +111,15 @@ export function TagsList({ tags, onSelect }: Props) {
         }}
       </Await>
     </Suspense>
+  );
+}
+
+function TagListSkeleton() {
+  return (
+    <div className="px-2" data-testid="loading-tags">
+      {Array.from({ length: 20 }).map((_, i) => {
+        return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
+      })}
+    </div>
   );
 }

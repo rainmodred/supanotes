@@ -12,7 +12,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           {children}
         </ThemeProvider>
       </AuthProvider>
-      <ReactQueryDevtools />
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

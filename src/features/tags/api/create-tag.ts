@@ -1,6 +1,10 @@
 import { supabase } from '@/lib/supabase';
 import { ITag } from '@/lib/types';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  QueryClient,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { tagsQuery } from './get-tags';
 
 export async function createTag({
@@ -22,15 +26,19 @@ export async function createTag({
   return data.at(0)!;
 }
 
+export function updateTagsCache(queryClient: QueryClient, newTag: ITag) {
+  queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
+    return [newTag, ...(oldData || [])];
+  });
+}
+
 export function useCreateTag() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: createTag,
     onSuccess: newTag => {
-      queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
-        return [newTag, ...(oldData || [])];
-      });
+      updateTagsCache(queryClient, newTag);
     },
   });
 }

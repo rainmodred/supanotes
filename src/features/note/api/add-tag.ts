@@ -1,10 +1,41 @@
 import { notesQuery } from '@/features/notes/api/get-notes';
 import { supabase } from '@/lib/supabase';
 import { INote, ITag } from '@/lib/types';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  QueryClient,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { noteQuery } from './get-note';
-import { createTag } from '@/features/tags/api/create-tag';
-import { tagsQuery } from '@/features/tags/api/get-tags';
+import { createTag, updateTagsCache } from '@/features/tags/api/create-tag';
+
+function updateNoteTagsCache(
+  queryClient: QueryClient,
+  noteId: string,
+  tag: ITag,
+) {
+  queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
+    if (oldData) {
+      return oldData.map(note => {
+        if (note.id === noteId) {
+          return {
+            ...note,
+            tags: [...note.tags, tag],
+          };
+        }
+        return note;
+      });
+    }
+  });
+
+  queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
+    if (oldData) {
+      return { ...oldData, tags: [...oldData.tags, tag] };
+    }
+  });
+
+  // queryClient.invalidateQueries(noteQuery(noteId));
+}
 
 export async function addTag({
   noteId,
@@ -34,26 +65,7 @@ export function useAddTag() {
   return useMutation({
     mutationFn: addTag,
     onSuccess: ({ noteId, tag }) => {
-      queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
-        if (oldData) {
-          return oldData.map(note => {
-            if (note.id === noteId) {
-              return {
-                ...note,
-                tags: [...note.tags, tag],
-              };
-            }
-            return note;
-          });
-        }
-      });
-
-      queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
-        if (oldData) {
-          return { ...oldData, tags: [...oldData.tags, tag] };
-        }
-      });
-      // queryClient.invalidateQueries(noteQuery(noteId));
+      updateNoteTagsCache(queryClient, noteId, tag);
     },
   });
 }
@@ -77,32 +89,8 @@ export function useCreateAddTag() {
   return useMutation({
     mutationFn: createAddTag,
     onSuccess: ({ noteId, tag }) => {
-      queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
-        if (oldData) {
-          return [...oldData, tag];
-        }
-        return [tag];
-      });
-      queryClient.setQueryData<INote>(noteQuery(noteId).queryKey, oldData => {
-        if (oldData) {
-          return { ...oldData, tags: [...oldData.tags, tag] };
-        }
-        return oldData;
-      });
-
-      queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
-        if (oldData) {
-          return oldData.map(note => {
-            if (note.id === noteId) {
-              return {
-                ...note,
-                tags: [...note.tags, tag],
-              };
-            }
-            return note;
-          });
-        }
-      });
+      updateTagsCache(queryClient, tag);
+      updateNoteTagsCache(queryClient, noteId, tag);
     },
   });
 }

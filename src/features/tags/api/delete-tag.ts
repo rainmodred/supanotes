@@ -21,15 +21,27 @@ export function useDeleteTag(id: string) {
     onSuccess: () => {
       queryClient.setQueryData<ITag[]>(tagsQuery.queryKey, oldData => {
         if (oldData) {
-          return oldData.filter(t => t.id !== id);
+          return oldData.filter(tag => tag.id !== id);
         }
       });
 
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {
+        //remove tag from note
         if (oldData) {
           for (const note of oldData) {
             if (note.tags.some(tag => tag.id === id)) {
-              queryClient.invalidateQueries(noteQuery(note.id));
+              // queryClient.invalidateQueries(noteQuery(note.id));
+              queryClient.setQueryData<INote>(
+                noteQuery(note.id).queryKey,
+                oldData => {
+                  if (oldData) {
+                    return {
+                      ...oldData,
+                      tags: oldData.tags.filter(tag => tag.id !== id),
+                    };
+                  }
+                },
+              );
             }
           }
           return oldData.map(note => {

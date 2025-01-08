@@ -1,9 +1,8 @@
 import { noteQuery } from '@/features/note/api/get-note';
 import { notesQuery } from '@/features/notes/api/get-notes';
-import { queryClient } from '@/lib/react-query';
 import { supabase } from '@/lib/supabase';
 import { INote, ITag } from '@/lib/types';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { tagsQuery } from './get-tags';
 
 export async function updateTag({ id, name }: { id: string; name: string }) {
@@ -20,6 +19,8 @@ export async function updateTag({ id, name }: { id: string; name: string }) {
 }
 
 export function useUpdateTag() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: updateTag,
     onSuccess: renamedTag => {

@@ -1,16 +1,14 @@
 import { MultipleSelector, Option } from '@/components/ui/multiple-selector';
-import { tagsQuery } from '@/features/tags/api/get-tags';
+import { useTags } from '@/features/tags/api/get-tags';
 import { ITag } from '@/lib/types';
-import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useAddTag, useCreateAddTag } from '../api/add-tag';
+import { useRemoveTag } from '../api/remove-tag';
+import { useAuth } from '@/lib/auth';
 
 interface Props {
-  tags: ITag[];
-  onTagChange: (
-    data:
-      | { intent: 'create-tag'; tag: Omit<ITag, 'id'> }
-      | { intent: 'select-tag' | 'unselect-tag'; tag: ITag },
-  ) => void;
+  id: string;
+  noteTags: ITag[];
 }
 
 function transformTags(tags: ITag[]) {
@@ -23,16 +21,22 @@ function transformTags(tags: ITag[]) {
   ];
 }
 
-export function TagSelector({ tags, onTagChange }: Props) {
-  const { data: allTags } = useQuery({ ...tagsQuery });
-  const [value, setValue] = useState<Option[]>(transformTags(tags));
+export function TagSelector({ id, noteTags }: Props) {
+  const { data: tags } = useTags();
+  const [value, setValue] = useState<Option[]>(transformTags(noteTags));
+
+  const { session } = useAuth();
+
+  const addTagMutation = useAddTag();
+  const removeTagMutation = useRemoveTag();
+  const createAddTagMutation = useCreateAddTag();
 
   return (
     <div>
       <MultipleSelector
         value={value}
         options={
-          allTags?.map(({ id, name }) => {
+          tags?.map(({ id, name }) => {
             return {
               id,
               label: name,
@@ -41,22 +45,27 @@ export function TagSelector({ tags, onTagChange }: Props) {
           }) ?? []
         }
         onChange={setValue}
-        onCreate={async ({ value }) => {
-          onTagChange({ intent: 'create-tag', tag: { name: value } });
+        onCreate={async option => {
+          createAddTagMutation.mutate({
+            noteId: id,
+            userId: session!.user.id,
+            name: option.value,
+          });
         }}
         onSelect={option => {
           if (typeof option.id === 'string') {
-            onTagChange({
-              intent: 'select-tag',
-              tag: { id: option.id, name: option.value },
+            addTagMutation.mutate({
+              noteId: id,
+              tagId: option.id,
+              name: option.value,
             });
           }
         }}
         onUnselect={option => {
           if (typeof option.id === 'string') {
-            onTagChange({
-              intent: 'unselect-tag',
-              tag: { id: option.id, name: option.value },
+            removeTagMutation.mutate({
+              noteId: id,
+              tagId: option.id,
             });
           }
         }}

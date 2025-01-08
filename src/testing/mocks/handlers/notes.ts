@@ -64,11 +64,12 @@ export const notesHandlers = [
     try {
       const url = new URL(request.url);
       const id = url.searchParams.get('id')?.slice(3);
+
       if (!id) {
         throw new Error();
       }
-      db.note.delete({ where: { id: { equals: id } } });
-      return new HttpResponse(null, { status: 204 });
+      const deletedNote = db.note.delete({ where: { id: { equals: id } } });
+      return HttpResponse.json([{ id: deletedNote?.id }]);
     } catch (error: any) {
       return HttpResponse.json(
         { message: error?.message || 'Server Error' },

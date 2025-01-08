@@ -1,10 +1,15 @@
 import { supabase } from '@/lib/supabase';
 import { INote } from '@/lib/types';
+import { useSuspenseQuery } from '@tanstack/react-query';
 
 export const noteQuery = (id: string) => ({
   queryKey: ['notes', id],
   queryFn: async () => fetchNote(id),
 });
+
+export function useNote(id: string) {
+  return useSuspenseQuery({ ...noteQuery(id) });
+}
 
 async function fetchNote(noteId: string) {
   const { data, error } = await supabase

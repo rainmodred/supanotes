@@ -1,22 +1,24 @@
 import { useDebounce } from '@/components/ui/multiple-selector';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Markdown from 'react-markdown';
-import React from 'react';
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { useUpdateNote } from '../api/update-note';
 
 interface Props {
+  id: string;
   initialBody: string;
   mode: 'edit' | 'read';
-  onUpdate: (field: 'body', value: string) => void;
 }
 
-export function EditorBody({ initialBody, mode, onUpdate }: Props) {
+export function EditorBody({ id, initialBody, mode }: Props) {
   const [body, setBody] = useState(initialBody);
   const debouncedBody = useDebounce(body, 500);
   const isBodyChanged = useRef(false);
 
-  const onChange = React.useCallback((val: string) => {
+  const { mutate } = useUpdateNote();
+
+  const onChange = useCallback((val: string) => {
     setBody(val);
     isBodyChanged.current = true;
   }, []);
@@ -26,8 +28,9 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
       return;
     }
 
-    onUpdate('body', debouncedBody);
-  }, [debouncedBody, onUpdate]);
+    // onUpdate('body', debouncedBody);
+    mutate({ id, body: debouncedBody });
+  }, [debouncedBody, mutate, id]);
 
   return (
     <div className="flex-grow overflow-auto">
@@ -39,11 +42,11 @@ export function EditorBody({ initialBody, mode, onUpdate }: Props) {
           extensions={[markdown({ base: markdownLanguage })]}
           onChange={onChange}
           theme={'none'}
-          className="prose dark:prose-invert h-full max-w-full"
+          className="prose h-full max-w-full dark:prose-invert"
           data-testid="codemirror"
         />
       ) : (
-        <Markdown className="prose dark:prose-invert p-4">{body}</Markdown>
+        <Markdown className="prose p-4 dark:prose-invert">{body}</Markdown>
       )}
     </div>
   );

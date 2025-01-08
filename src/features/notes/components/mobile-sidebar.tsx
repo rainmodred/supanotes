@@ -7,13 +7,13 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { CreateTag } from '@/features/tags/components/create-tag';
 import { TagsList } from '@/features/tags/components/tags-list';
 import { Settings } from 'lucide-react';
-import { ITag } from '@/lib/types';
 import { TagsHeader } from '@/features/tags/components/tags-header';
+import { TagListSkeleton } from '@/features/tags/components/tags-skeleton';
+import { Suspense } from 'react';
 
-export function MobileSidebar({ tags }: { tags: Promise<ITag[]> }) {
+export function MobileSidebar() {
   const { setOpenMobile } = useSidebar();
 
   return (
@@ -25,8 +25,9 @@ export function MobileSidebar({ tags }: { tags: Promise<ITag[]> }) {
             <SidebarMenuButton asChild className="px-4">
               <TagsHeader onSelect={() => setOpenMobile(false)} />
             </SidebarMenuButton>
-            <CreateTag />
-            <TagsList tags={tags} onSelect={() => setOpenMobile(false)} />
+            <Suspense fallback={<TagListSkeleton />}>
+              <TagsList onSelect={() => setOpenMobile(false)} />
+            </Suspense>
           </div>
         </SidebarMenu>
       </SidebarContent>

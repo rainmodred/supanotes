@@ -1,125 +1,91 @@
-import { buttonVariants } from '@/components/ui/button';
-import { Hash } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Suspense } from 'react';
-import { Await, Link, useFetchers, useSearchParams } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { EditTag } from './edit-tag';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Spinner } from '@/components/spinner';
-import { ITag } from '@/lib/types';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/lib/auth';
+import { useCreateTag } from '../api/create-tag';
+import { useTags } from '../api/get-tags';
+import { TagsListItem } from './tag-item';
+import { Plus } from 'lucide-react';
 
-interface Props {
-  tags: Promise<ITag[]>;
-  onSelect?: () => void;
-}
+export function TagsList({ onSelect }: { onSelect?: () => void }) {
+  const { session } = useAuth();
+  const { data: tags } = useTags();
 
-export function TagsList({ tags, onSelect }: Props) {
-  //WTF
-  const [searchParams] = useSearchParams();
+  const tagInputRef = useRef<HTMLInputElement | null>(null);
+  const [formError, setFormError] = useState('');
+  const [tagName, setTagName] = useState('');
 
-  const fetchers = useFetchers();
-  const tagFetchers = fetchers
-    .filter(fetcher => {
-      const intent = fetcher.formData?.get('intent');
+  const createTagMutation = useCreateTag();
 
-      return (
-        (fetcher.formAction?.startsWith('/notes') && intent === 'create-tag') ||
-        intent === 'delete-tag' ||
-        intent === 'rename-tag'
-      );
-    })
-    .map(({ formData }) => {
-      return {
-        id: formData?.get('id') || '1',
-        name: formData?.get('name'),
-        intent: formData?.get('intent'),
-      };
-    });
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (tags?.some(tag => tag.name === tagName)) {
+      setFormError('Tag already exists');
+      return;
+    }
+
+    setFormError('');
+    setTagName('');
+    createTagMutation.mutate({ userId: session!.user.id, name: tagName });
+  }
 
   return (
-    <Suspense fallback={<TagListSkeleton />}>
-      <Await resolve={tags}>
-        {tags => {
-          return (
-            <ScrollArea className="h-full w-full">
-              <ul className="m-0">
-                {[
-                  ...tags,
-                  // Optimistic create tag
-                  ...tagFetchers.filter(
-                    fetcher =>
-                      fetcher.intent !== 'rename-tag' &&
-                      fetcher.intent !== 'delete-tag',
-                  ),
-                ].map(tag => {
-                  const isDeleting = tagFetchers.some(
-                    fetcher =>
-                      fetcher.intent === 'delete-tag' && fetcher.id === tag.id,
-                  );
-                  const isRenaming = tagFetchers.some(
-                    fetcher =>
-                      fetcher.intent === 'rename-tag' && fetcher.id === tag.id,
-                  );
-                  return (
-                    <li
-                      key={tag.id}
-                      className={cn(
-                        `mt-0 flex w-full items-center justify-between gap-2 px-4 pr-1`,
-                        {
-                          'bg-accent': searchParams.get('filter') === tag.name,
-                          'opacity-30': isDeleting,
-                        },
-                      )}
-                    >
-                      <Link
-                        onClick={onSelect}
-                        to={`?filter=${tag.name}`}
-                        className={cn(
-                          buttonVariants({ variant: 'ghost' }),
-                          `hover:none flex w-full grow justify-start gap-2 border-none bg-inherit px-0 py-0`,
-                        )}
-                      >
-                        <Hash size="16px" className="shrink-0" />
-                        <span className="overflow-hidden text-ellipsis">
-                          {tag.name}
-                        </span>
-                      </Link>
+    <>
+      <div className="flex w-full items-center justify-between px-4 py-1">
+        <span>Tags:</span>
+        <Button
+          onClick={() => {
+            tagInputRef?.current?.focus();
+          }}
+          size="icon"
+          variant="ghost"
+        >
+          <Plus size="16px" />
+        </Button>
+      </div>
 
-                      {/* Not working, action works but loader is not called */}
-                      {/* {!isDeleting && <EditTag tag={tag} />} */}
-
-                      {/* 
-                        tag.id === '1' optimistic create
-                        TODO: Change tag.id for something better 
-                      */}
-                      {tag.id === '1' && (
-                        <Spinner size="md" data-testid="loading" />
-                      )}
-
-                      {isRenaming && (
-                        <Spinner size="md" data-testid="loading" />
-                      )}
-
-                      <EditTag tag={tag} hidden={isDeleting} />
-                    </li>
-                  );
-                })}
-              </ul>
-            </ScrollArea>
-          );
-        }}
-      </Await>
-    </Suspense>
-  );
-}
-
-function TagListSkeleton() {
-  return (
-    <div className="px-2" data-testid="loading-tags">
-      {Array.from({ length: 20 }).map((_, i) => {
-        return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
-      })}
-    </div>
+      <form
+        method="post"
+        className={cn('flex w-full items-center gap-2 px-4 pb-2')}
+        onSubmit={handleSubmit}
+      >
+        <div className="w-full">
+          <Input
+            placeholder="Add tag"
+            name="name"
+            ref={tagInputRef}
+            onBlur={() => setTagName('')}
+            value={tagName}
+            onChange={e => setTagName(e.target.value)}
+          />
+          <div className="px-2 py-2">
+            {formError && (
+              <p className="text-xs font-medium text-destructive">
+                {formError}
+              </p>
+            )}
+          </div>
+        </div>
+      </form>
+      <ScrollArea className="h-full w-full">
+        <ul className="m-0">
+          {createTagMutation.isPending && (
+            <TagsListItem
+              tag={{
+                name: createTagMutation.variables.name,
+                id: createTagMutation.variables.name,
+              }}
+              isLoading={true}
+            />
+          )}
+          {tags.map(tag => (
+            <TagsListItem key={tag.id} tag={tag} onSelect={onSelect} />
+          ))}
+        </ul>
+      </ScrollArea>
+    </>
   );
 }

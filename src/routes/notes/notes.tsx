@@ -6,6 +6,7 @@ import {
   DesktopLayout,
   MobileLayout,
 } from '@/features/notes/components/layouts';
+import { Spinner } from '@/components/spinner';
 
 async function getNotes(queryClient: QueryClient) {
   const notes = await queryClient.fetchQuery({ ...notesQuery });
@@ -30,6 +31,13 @@ export const clientLoader = (queryClient: QueryClient) => async () => {
 
 export default function Notes() {
   const isMobile = useMediaQuery('(max-width: 48rem)');
+  if (isMobile == undefined) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner size="xl" />
+      </div>
+    );
+  }
 
   if (isMobile) {
     return <MobileLayout />;

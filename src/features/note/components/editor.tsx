@@ -38,7 +38,7 @@ export function Editor() {
 
   //TODO: FIXME
   if (!note) {
-    return <p>send help</p>;
+    return null;
   }
 
   return (

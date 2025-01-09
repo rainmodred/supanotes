@@ -5,6 +5,7 @@ import { queryClient } from './lib/react-query';
 import { Root } from './routes/root';
 import { QueryClient } from '@tanstack/react-query';
 import { Spinner } from './components/spinner';
+import NotFound from './routes/not-found';
 
 function HydrateFallback() {
   return (
@@ -17,7 +18,7 @@ function HydrateFallback() {
 function ErrorBoundary() {
   let error = useRouteError();
   console.error(error);
-  return <div>Dang!</div>;
+  return <NotFound />;
 }
 
 function convert(queryClient: QueryClient) {

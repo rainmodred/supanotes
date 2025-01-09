@@ -27,6 +27,7 @@ export async function removeTag({
 export function useRemoveTag() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['update-note'],
     mutationFn: removeTag,
     onSuccess: ({ noteId, tagId }) => {
       queryClient.setQueryData<INote[]>(notesQuery.queryKey, oldData => {

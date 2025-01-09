@@ -63,6 +63,7 @@ export async function addTag({
 export function useAddTag() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['update-note'],
     mutationFn: addTag,
     onSuccess: ({ noteId, tag }) => {
       updateNoteTagsCache(queryClient, noteId, tag);
@@ -87,6 +88,7 @@ async function createAddTag({
 export function useCreateAddTag() {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['update-note'],
     mutationFn: createAddTag,
     onSuccess: ({ noteId, tag }) => {
       updateTagsCache(queryClient, tag);

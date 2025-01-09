@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { filterNotes } from '../api/filter-notes';
-import { INote } from '@/lib/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { NotePreview } from './note-preview';
 import { useSearchParams } from 'react-router';
+import { INote } from '@/lib/types';
 
 interface Props {
   notes: INote[];

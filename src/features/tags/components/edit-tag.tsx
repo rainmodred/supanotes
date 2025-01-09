@@ -7,13 +7,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/lib/auth';
 import { ITag } from '@/lib/types';
-import { useQuery } from '@tanstack/react-query';
 import { Ellipsis, Trash2 } from 'lucide-react';
-import { useRef, useState } from 'react';
-import { useFetcher } from 'react-router';
-import { tagsQuery } from '../api/get-tags';
+import { useState } from 'react';
+import { useTags } from '../api/get-tags';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,38 +21,48 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useUpdateTag } from '../api/update-tag';
+import { Spinner } from '@/components/spinner';
+import { useDeleteTag } from '../api/delete-tag';
 
 interface Props {
   tag: ITag;
   hidden: boolean;
 }
 export function EditTag({ tag, hidden }: Props) {
-  const fetcher = useFetcher();
+  const { data: tags } = useTags();
 
-  const { session } = useAuth();
-
-  const { data: tags } = useQuery({ ...tagsQuery });
-
-  const formRef = useRef<HTMLFormElement | null>(null);
   const [formError, setFormError] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
+  const [tagName, setTagName] = useState(tag.name);
+
+  const updateMutation = useUpdateTag();
+  const deleteMutation = useDeleteTag(tag.id);
 
   function handleDelete() {
-    if (!formRef.current || !session) {
+    deleteMutation.mutate(tag.id, { onSuccess: () => setDropdownOpen(false) });
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (tags?.some(tag => tag.name === tagName)) {
+      setFormError('Tag already exists');
       return;
     }
 
-    const formData = new FormData(formRef.current);
-    formData.append('intent', 'delete-tag');
-    formData.append('id', tag.id);
-
-    setAlertOpen(false);
-    fetcher.submit(formData, { method: 'delete' });
+    setFormError('');
+    setDropdownOpen(false);
+    updateMutation.mutate({ name: tagName, id: tag.id });
   }
 
   if (hidden) {
     return null;
+  }
+
+  if (updateMutation.isPending) {
+    return <Spinner size="md" data-testid="loading" />;
   }
 
   return (
@@ -69,33 +76,15 @@ export function EditTag({ tag, hidden }: Props) {
         <DropdownMenuContent>
           <DropdownMenuLabel>Name</DropdownMenuLabel>
 
-          <fetcher.Form
-            ref={formRef}
-            method="post"
-            onSubmit={e => {
-              e.preventDefault();
-              if (!formRef.current || !session) {
-                return;
-              }
-              const formData = new FormData(formRef.current);
-              formData.append('id', tag.id);
-              formData.append('intent', 'rename-tag');
-
-              const renamedTag = formData.get('name');
-              if (renamedTag) {
-                if (tags?.some(tag => tag.name === renamedTag)) {
-                  setFormError('Tag already exists');
-                } else {
-                  setFormError('');
-                  setDropdownOpen(false);
-                  fetcher.submit(formData, { method: 'post' });
-                }
-              }
-            }}
-          >
-            <Input className="my-2" name="name" defaultValue={tag.name} />
+          <form method="post" onSubmit={handleSubmit}>
+            <Input
+              className="my-2"
+              name="name"
+              value={tagName}
+              onChange={e => setTagName(e.target.value)}
+            />
             {formError && (
-              <p className="text-destructive text-xs font-medium">
+              <p className="text-xs font-medium text-destructive">
                 {formError}
               </p>
             )}
@@ -108,7 +97,7 @@ export function EditTag({ tag, hidden }: Props) {
             >
               <Trash2 size="16" /> Delete
             </Button>
-          </fetcher.Form>
+          </form>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -123,6 +112,9 @@ export function EditTag({ tag, hidden }: Props) {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete}>
+              {deleteMutation.isPending && (
+                <Spinner size="sm" data-testid="loading" />
+              )}
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -4,23 +4,18 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { CreateTag } from '@/features/tags/components/create-tag';
 import { TagsList } from '@/features/tags/components/tags-list';
-import { ITag, INote } from '@/lib/types';
 import { useLocation, Outlet } from 'react-router';
 import { MobileSidebar } from './mobile-sidebar';
 import { NotesHeader } from './notes-header';
 import { NotesList } from './notes-list';
 import { Settings } from './settings';
 import { TagsHeader } from '@/features/tags/components/tags-header';
+import { Suspense } from 'react';
+import { TagListSkeleton } from '@/features/tags/components/tags-skeleton';
+import NotesSkeleton from './notes-skeleton';
 
-export function MobileLayout({
-  tags,
-  notes,
-}: {
-  tags: Promise<ITag[]>;
-  notes: Promise<INote[]>;
-}) {
+export function MobileLayout() {
   const location = useLocation();
   //show selected note
   if (location.pathname !== '/notes') {
@@ -33,25 +28,19 @@ export function MobileLayout({
     //show notes list and tags sidebar
     return (
       <SidebarProvider>
-        <MobileSidebar tags={tags} />
+        <MobileSidebar />
         <div className="flex h-full w-full flex-col py-4">
           <NotesHeader>
             <SidebarTrigger />
           </NotesHeader>
-          <NotesList notes={notes} />
+          <NotesList />
         </div>
       </SidebarProvider>
     );
   }
 }
 
-export function DesktopLayout({
-  tags,
-  notes,
-}: {
-  tags: Promise<ITag[]>;
-  notes: Promise<INote[]>;
-}) {
+export function DesktopLayout() {
   return (
     <ResizablePanelGroup
       direction="horizontal"
@@ -60,8 +49,9 @@ export function DesktopLayout({
       <ResizablePanel defaultSize={15} collapsible>
         <div className="flex h-full flex-col py-4">
           <TagsHeader />
-          <CreateTag />
-          <TagsList tags={tags} />
+          <Suspense fallback={<TagListSkeleton />}>
+            <TagsList />
+          </Suspense>
           <Settings />
         </div>
       </ResizablePanel>
@@ -69,7 +59,9 @@ export function DesktopLayout({
       <ResizablePanel defaultSize={25} collapsible>
         <div className="flex h-full flex-col py-4">
           <NotesHeader />
-          <NotesList notes={notes} />
+          <Suspense fallback={<NotesSkeleton />}>
+            <NotesList />
+          </Suspense>
         </div>
       </ResizablePanel>
       <ResizableHandle />

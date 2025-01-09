@@ -1,17 +1,15 @@
-import { notesQuery } from '@/features/notes/api/get-notes';
 import { supabase } from '@/lib/supabase';
 import { INote } from '@/lib/types';
-import { QueryClient } from '@tanstack/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
 
-export const noteQuery = (id: string, queryClient: QueryClient) => ({
+export const noteQuery = (id: string) => ({
   queryKey: ['notes', id],
   queryFn: async () => fetchNote(id),
-  initialData: () => {
-    return queryClient
-      .getQueryData(notesQuery.queryKey)
-      ?.find(note => note.id === id);
-  },
 });
+
+export function useNote(id: string) {
+  return useSuspenseQuery({ ...noteQuery(id) });
+}
 
 async function fetchNote(noteId: string) {
   const { data, error } = await supabase

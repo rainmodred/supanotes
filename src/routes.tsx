@@ -5,6 +5,7 @@ import { queryClient } from './lib/react-query';
 import { Root } from './routes/root';
 import { QueryClient } from '@tanstack/react-query';
 import { Spinner } from './components/spinner';
+import NotFound from './routes/not-found';
 
 function HydrateFallback() {
   return (
@@ -17,7 +18,7 @@ function HydrateFallback() {
 function ErrorBoundary() {
   let error = useRouteError();
   console.error(error);
-  return <div>Dang!</div>;
+  return <NotFound />;
 }
 
 function convert(queryClient: QueryClient) {
@@ -60,10 +61,6 @@ export const routes: RouteObject[] = [
         lazy: () => import('./routes/notes/notes').then(convert(queryClient)),
         children: [
           {
-            path: 'new',
-            lazy: () => import('./routes/new').then(convert(queryClient)),
-          },
-          {
             path: ':noteId',
             lazy: () => import('./routes/note/note').then(convert(queryClient)),
             errorElement: <ErrorBoundary />,
@@ -71,5 +68,9 @@ export const routes: RouteObject[] = [
         ],
       },
     ],
+  },
+  {
+    path: '*',
+    lazy: () => import('./routes/not-found').then(convert(queryClient)),
   },
 ];

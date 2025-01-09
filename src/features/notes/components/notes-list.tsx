@@ -1,16 +1,12 @@
-import { Skeleton } from '@/components/ui/skeleton';
-import { Suspense, useState } from 'react';
-import { Await } from 'react-router';
+import { useState } from 'react';
 import { FilteredNotes } from './filtered-notes';
 import { Input } from '@/components/ui/input';
-import { INote } from '@/lib/types';
+import { useNotes } from '../api/get-notes';
 
-interface Props {
-  notes: Promise<INote[]>;
-}
-
-export function NotesList({ notes }: Props) {
+export function NotesList() {
   const [search, setSearch] = useState('');
+  const { data: notes } = useNotes();
+
   return (
     <>
       <div className="px-4">
@@ -21,21 +17,7 @@ export function NotesList({ notes }: Props) {
           onChange={e => setSearch(e.target.value)}
         />
       </div>
-      <Suspense
-        fallback={
-          <div className="px-2" data-testid="loading-notes">
-            {Array.from({ length: 20 }).map((_, i) => {
-              return <Skeleton key={`st-${i}`} className="mb-2 h-[20px]" />;
-            })}
-          </div>
-        }
-      >
-        <Await resolve={notes}>
-          {notes => {
-            return <FilteredNotes notes={notes} search={search} />;
-          }}
-        </Await>
-      </Suspense>
+      <FilteredNotes notes={notes} search={search} />
     </>
   );
 }

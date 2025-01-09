@@ -1,7 +1,5 @@
-import { Link, useFetcher } from 'react-router';
-import { useCallback, useRef, useState } from 'react';
-import { useAuth } from '@/lib/auth';
-import { INote, ITag } from '@/lib/types';
+import { Link, useParams } from 'react-router';
+import { useState } from 'react';
 import { TagSelector } from './tag-selector';
 import { EditorBody } from './editor-body';
 import {
@@ -17,93 +15,52 @@ import {
 import { EditorControls } from './editor-controls';
 import { Title } from './title';
 import { ChevronLeft } from 'lucide-react';
+import { useNote } from '../api/get-note';
+import { useDeleteNote } from '../api/delete-note';
+import { useIsMutating } from '@tanstack/react-query';
 
-interface Props {
-  note: INote;
-}
-
-export function Editor({ note }: Props) {
-  const { session } = useAuth();
-
-  const fetcher = useFetcher();
-  const formRef = useRef<HTMLFormElement | null>(null);
+export function Editor() {
+  const { noteId: id } = useParams() as {
+    noteId: string;
+  };
+  const { data: note } = useNote(id);
 
   const [mode, setMode] = useState<'read' | 'edit'>('edit');
   const [open, setOpen] = useState(false);
+
+  const deleteNoteMutation = useDeleteNote();
+
+  const isMutating = useIsMutating({ mutationKey: ['update-note'] });
 
   function changeMode() {
     setMode(mode === 'edit' ? 'read' : 'edit');
   }
 
-  const { submit } = fetcher;
-  const handleUpdate = useCallback(
-    (field: 'title' | 'body', value: string) => {
-      if (!formRef.current) {
-        return;
-      }
-      const formData = new FormData(formRef.current);
-      if (field === 'title') {
-        formData.append('title', value);
-        formData.append('intent', 'update-title');
-      }
-      if (field === 'body') {
-        formData.append('body', value);
-        formData.append('intent', 'update-body');
-      }
-
-      submit(formData, { method: 'post' });
-    },
-    [submit],
-  );
-
-  function handleTag({
-    intent,
-    tag,
-  }:
-    | { intent: 'create-tag'; tag: Omit<ITag, 'id'> }
-    | { intent: 'select-tag' | 'unselect-tag'; tag: ITag }) {
-    if (!session) {
-      return;
-    }
-    const formData = new FormData();
-    formData.append('tagName', tag.name);
-    formData.append('userId', session.user.id);
-    if (intent === 'select-tag' || intent === 'unselect-tag') {
-      formData.append('tagId', tag.id);
-    }
-
-    formData.append('intent', intent);
-    fetcher.submit(formData, { method: 'post' });
+  //TODO: FIXME
+  if (!note) {
+    return null;
   }
 
   return (
-    <fetcher.Form method="post" className="h-full" ref={formRef}>
-      {session && (
-        <input name="userId" value={session?.user.id} type="hidden" />
-      )}
-
+    <div className="h-full">
       <div className="flex h-full flex-col">
         <div className="px-2">
           <div className="mb-2 flex items-center gap-2">
             <Link to="/notes">
               <ChevronLeft />
             </Link>
-            <Title initialTile={note.title} onUpdate={handleUpdate} />
+            <Title id={id} initialTile={note.title} />
             <EditorControls
               mode={mode}
               onChangeMode={changeMode}
               onDelete={() => setOpen(true)}
-              isLoading={fetcher.state === 'submitting'}
+              isLoading={!!isMutating}
             />
           </div>
 
-          <TagSelector tags={note.tags} onTagChange={handleTag} />
+          <TagSelector id={id} noteTags={note.tags} />
         </div>
-        <EditorBody
-          initialBody={note?.body ?? ''}
-          mode={mode}
-          onUpdate={handleUpdate}
-        />
+        <EditorBody id={id} initialBody={note?.body ?? ''} mode={mode} />
       </div>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
@@ -118,9 +75,7 @@ export function Editor({ note }: Props) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                const formData = new FormData();
-                formData.append('intent', 'delete-note');
-                fetcher.submit(formData, { method: 'post' });
+                deleteNoteMutation.mutate(id);
               }}
             >
               Confirm
@@ -128,6 +83,6 @@ export function Editor({ note }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </fetcher.Form>
+    </div>
   );
 }

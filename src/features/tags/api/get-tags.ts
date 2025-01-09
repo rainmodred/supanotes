@@ -15,6 +15,7 @@ async function fetchTags() {
   const { data, error } = await supabase
     .from('tags')
     .select(`id, name`)
+    .order('name', { ascending: true })
     .returns<ITag[]>();
   if (error) {
     throw error;

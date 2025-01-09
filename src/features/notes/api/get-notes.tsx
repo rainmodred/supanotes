@@ -24,6 +24,7 @@ async function fetchNotes() {
       tags(id, name)
     `,
     )
+    .order('updated_at', { ascending: false })
     .returns<INote[]>();
   // .returns<Omit<INote, 'userId'>[]>();
   if (error) {

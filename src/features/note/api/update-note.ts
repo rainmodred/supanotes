@@ -17,7 +17,16 @@ export async function updateNote({
     .from('notes')
     .update({ id, title, body })
     .eq('id', id)
-    .select()
+    .select(
+      `
+      id, 
+      created_at, 
+      updated_at, 
+      title, 
+      body, 
+      tags(id, name)
+    `,
+    )
     .returns<INote[]>();
   if (error) {
     throw error;
@@ -39,18 +48,6 @@ export function useUpdateNote() {
             note.id === updatedNote.id ? updatedNote : note,
           );
         }
-        // if (oldData) {
-        //   return oldData.map(note => {
-        //     if (note.id === noteId) {
-        //       //...note or add tags to updateNote select()
-        //       return {
-        //         ...note,
-        //         ...returnedNote,
-        //       };
-        //     }
-        //     return note;
-        //   });
-        // }
       });
     },
   });

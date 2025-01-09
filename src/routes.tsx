@@ -60,10 +60,6 @@ export const routes: RouteObject[] = [
         lazy: () => import('./routes/notes/notes').then(convert(queryClient)),
         children: [
           {
-            path: 'new',
-            lazy: () => import('./routes/new').then(convert(queryClient)),
-          },
-          {
             path: ':noteId',
             lazy: () => import('./routes/note/note').then(convert(queryClient)),
             errorElement: <ErrorBoundary />,

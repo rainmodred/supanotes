@@ -2,6 +2,7 @@ import { INote } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { NavLink, useLocation } from 'react-router';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 export function NotePreview({ note }: { note: INote }) {
   const truncatedBody = note.body.split('\n').slice(0, 2);
@@ -22,6 +23,11 @@ export function NotePreview({ note }: { note: INote }) {
         <span className="text-xs font-normal opacity-50">
           {format(new Date(note.updated_at), 'MMMM dd, yyyy, HH:mm')}
         </span>
+        <div className="flex flex-wrap gap-2">
+          {note.tags.map(tag => (
+            <Badge key={tag.id}>{tag.name}</Badge>
+          ))}
+        </div>
       </div>
     </NavLink>
   );

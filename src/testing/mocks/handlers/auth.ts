@@ -73,3 +73,51 @@ export const authHandlers = [
     }
   }),
 ];
+
+// import { rest } from 'msw';
+
+// export const handlers = [
+//   // Mock the sign-up endpoint
+//   rest.post('https://your-supabase-url.supabase.co/auth/v1/signup', (req, res, ctx) => {
+//     const { email, password } = req.body;
+
+//     // Simulate a successful sign-up response
+//     return res(
+//       ctx.status(200),
+//       ctx.json({
+//         user: {
+//           id: 'user-id',
+//           email,
+//         },
+//         session: {
+//           access_token: 'mock-access-token',
+//           refresh_token: 'mock-refresh-token',
+//         },
+//       })
+//     );
+//   }),
+
+//   // Mock the sign-in endpoint
+//   rest.post('https://your-supabase-url.supabase.co/auth/v1/token', (req, res, ctx) => {
+//     const { email, password } = req.body;
+
+//     // Simulate a successful sign-in response
+//     return res(
+//       ctx.status(200),
+//       ctx.json({
+//         access_token: 'mock-access-token',
+//         refresh_token: 'mock-refresh-token',
+//         user: {
+//           id: 'user-id',
+//           email,
+//         },
+//       })
+//     );
+//   }),
+
+//   // Mock the sign-out endpoint
+//   rest.post('https://your-supabase-url.supabase.co/auth/v1/logout', (req, res, ctx) => {
+//     // Simulate a successful sign-out response
+//     return res(ctx.status(200));
+//   }),
+// ];

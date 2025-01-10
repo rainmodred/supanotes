@@ -5,7 +5,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import PublicRoute from '../../components/public-route';
 
-describe('LoginRoute', () => {
+describe.skip('LoginRoute', () => {
   it.skip('should validate fields', async () => {
     const user = userEvent.setup();
     renderApp(

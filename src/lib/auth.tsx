@@ -30,13 +30,21 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 interface AuthProviderProps {
   children: React.ReactNode;
+  initialSession?: Session;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [session, setSession] = useState<Session | null | undefined>(undefined);
+export function AuthProvider({ children, initialSession }: AuthProviderProps) {
+  const [session, setSession] = useState<Session | null | undefined>(
+    initialSession,
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (initialSession) {
+      supabase.auth.setSession(initialSession);
+      return;
+    }
+
     setIsLoading(true);
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoading(false);
@@ -50,7 +58,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initialSession]);
 
   async function logout() {
     await supabase.auth.signOut();

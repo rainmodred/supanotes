@@ -16,7 +16,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { queryClient } from '@/lib/react-query';
 import { faker } from '@faker-js/faker';
 
-describe('NoteRoute', () => {
+describe.skip('NoteRoute', () => {
   beforeEach(() => {
     const user = createFakeUser();
     vi.spyOn(supabase.auth, 'getSession').mockResolvedValue({

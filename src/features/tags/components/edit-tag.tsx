@@ -69,7 +69,12 @@ export function EditTag({ tag, hidden }: Props) {
     <>
       <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost" data-testid={`edit-${tag.name}`}>
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            data-testid={`edit-${tag.name}`}
+          >
             <Ellipsis size="12" />
           </Button>
         </DropdownMenuTrigger>
@@ -111,7 +116,7 @@ export function EditTag({ tag, hidden }: Props) {
           </AlertDialogDescription>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+            <AlertDialogAction type="button" onClick={handleDelete}>
               {deleteMutation.isPending && (
                 <Spinner size="sm" data-testid="loading" />
               )}

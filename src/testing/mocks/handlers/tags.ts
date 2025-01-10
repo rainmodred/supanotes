@@ -37,6 +37,8 @@ export const tagsHandlers = [
     await delay();
     try {
       const newTag = (await request.json()) as ITag;
+      console.log('TAGS HANDLER:', newTag, db.tag.getAll());
+
       const addedTag = createFakeTag(newTag.name);
       return HttpResponse.json([addedTag]);
     } catch (error: any) {

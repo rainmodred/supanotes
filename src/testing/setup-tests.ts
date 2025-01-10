@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
+// import { cleanup } from '@testing-library/react';
 import { server } from './mocks/server';
 import { queryClient } from '@/lib/react-query';
 import { fetch } from 'cross-fetch';
@@ -62,7 +62,7 @@ beforeAll(() => {
 afterAll(() => server.close());
 
 afterEach(() => {
-  cleanup();
+  // cleanup();
   server.resetHandlers();
   queryClient.clear();
 });

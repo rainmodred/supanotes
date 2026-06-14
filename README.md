@@ -1,11 +1,5 @@
 ## Demo
 ![demo](https://github.com/user-attachments/assets/f75fc448-b7f0-4757-a60d-6ba578e62781)
-[Live demo](https://supanotes.pages.dev/)
-```
-Demo user:
-email: demo@example.com
-password: 123456
-```
 
 ## Features
 - User Authentication: Login and register functionality for users
